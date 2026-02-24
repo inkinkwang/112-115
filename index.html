@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>115年個人申請篩選器(免費版)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 32px; margin-bottom: 10px; }
+        .content { padding: 30px; }
+        .section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .section h3 { color: #333; margin-bottom: 20px; font-size: 20px; }
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .score-item label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        .score-item input, .score-item select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .score-item input:focus, .score-item select:focus { outline: none; border-color: #667eea; }
+        .school-checkboxes {
+            max-height: 300px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+        .school-checkbox { padding: 8px; border-radius: 5px; }
+        .school-checkbox:hover { background: #f0f0f0; }
+        .school-checkbox input { margin-right: 8px; }
+        .select-all {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+        }
+        .select-all label { cursor: pointer; font-weight: 600; color: #667eea; }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-warning:hover { background: #e0a800; }
+        .results { display: none; margin-top: 30px; }
+        .summary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .summary-number { font-size: 48px; font-weight: bold; }
+        .results-table-container {
+            max-height: 600px;
+            overflow: auto;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: 13px;
+            z-index: 10;
+        }
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 15px;
+        }
+        tr:hover { background: #f8f9fa; }
+        .checkbox-cell { text-align: center; }
+        .checkbox-cell input { 
+            width: 20px; 
+            height: 20px; 
+            cursor: pointer;
+            transform: scale(1.3);
+        }
+        .results table td {
+            font-size: 15px;
+            padding: 14px 10px;
+        }
+        .results table th {
+            font-size: 15px;
+            padding: 14px 10px;
+        }
+        .compare-section table td {
+            font-size: 15px;
+            padding: 14px 10px;
+        }
+        .compare-section table th {
+            font-size: 15px;
+            padding: 14px 10px;
+        }
+        .final-section table td {
+            font-size: 15px;
+            padding: 14px 10px;
+        }
+        .final-section table th {
+            font-size: 15px;
+            padding: 14px 10px;
+        }
+        .manual-select-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .manual-select-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr auto;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+        .manual-added-list {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .manual-added-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .manual-added-item button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .manual-added-item button:hover { background: #c82333; }
+        .compare-section { display: none; margin-top: 30px; }
+        .final-section { display: none; margin-top: 30px; }
+        .payment-notice {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        .payment-notice h3 {
+            color: #dc3545;
+            font-size: 24px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        .payment-notice p {
+            color: #dc3545;
+            font-size: 18px;
+            line-height: 1.8;
+            font-weight: 600;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 115年個人申請篩選器(免費版)</h1>
+            <p>根據114年篩選結果，評估通過第一階段篩選校系的粗估機率</p>
+        </div>
+        
+        <div class="content">
+            <!-- 風險需知 -->
+            <div class="section" style="border: 3px solid #dc3545; background: #fff5f5;">
+                <h3 style="color: #dc3545; margin-bottom: 15px;">⚠️ 風險需知與免責聲明 (請詳閱)</h3>
+                <div style="line-height: 1.8; color: #333; font-size: 14px;">
+                    <p style="margin-bottom: 15px; font-weight: 600;">
+                        本工具免費提供 115 學年度43間公私立大學申請入學之校系(注意有特定科系已剔除，請參閱Google表單說明剔除之科系學群)，旨在協助用戶對標 114 年第一階段篩選級分，建立個人初步落點評估。
+                    </p>
+                    <ul style="list-style: disc; padding-left: 25px;">
+                        <li style="margin-bottom: 8px;"><strong>僅供參考：</strong>免費版分析結果僅作為決策輔助，不作爲任何錄取、推薦保證，用戶須自行承擔決策風險。</li>
+                        <li style="margin-bottom: 8px;"><strong>數據限制：</strong>分析依據往年歷史數據，已多次校對，惟仍可能存在錯誤之處，請以官方公告資料為主，鑑於招生環境與競爭態勢具未來變動性，數據可能與實際結果存在偏差。</li>
+                        <li style="margin-bottom: 0;"><strong>篩選後可以選取最多 6 個校系至Google表單進行付費分析報告。</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="loadingMessage" class="loading">
+                <div>⏳ 正在載入資料...</div>
+                <div style="font-size: 14px; margin-top: 10px; color: #666;">請稍候，正在讀取資料中</div>
+            </div>
+
+            <!-- 輸入成績區 -->
+            <div id="inputSection" class="section" style="display: none;">
+                <h3>📝 步驟1：輸入您的學測成績</h3>
+                <div class="score-grid">
+                    <div class="score-item">
+                        <label>國文級分</label>
+                        <input type="number" id="chinese" min="0" max="15" placeholder="0-15">
+                    </div>
+                    <div class="score-item">
+                        <label>英文級分</label>
+                        <input type="number" id="english" min="0" max="15" placeholder="0-15">
+                    </div>
+                    <div class="score-item">
+                        <label>數學A級分</label>
+                        <input type="number" id="mathA" min="0" max="15" placeholder="0-15">
+                    </div>
+                    <div class="score-item">
+                        <label>數學B級分</label>
+                        <input type="number" id="mathB" min="0" max="15" placeholder="0-15">
+                    </div>
+                    <div class="score-item">
+                        <label>社會級分</label>
+                        <input type="number" id="social" min="0" max="15" placeholder="0-15">
+                    </div>
+                    <div class="score-item">
+                        <label>自然級分</label>
+                        <input type="number" id="science" min="0" max="15" placeholder="0-15">
+                    </div>
+                    <div class="score-item">
+                        <label>英聽級別</label>
+                        <select id="listening">
+                            <option value="">--</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="F">F</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 選擇學校區 -->
+            <div id="schoolSection" class="section" style="display: none;">
+                <h3>🏫 步驟2：選擇學校（可複選）</h3>
+                <div class="select-all">
+                    <label>
+                        <input type="checkbox" id="selectAllSchools" onchange="toggleAllSchools()">
+                        全選/取消全選
+                    </label>
+                </div>
+                <div class="school-checkboxes" id="schoolCheckboxes"></div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="filterDepartments()">🔍 開始篩選</button>
+                    <button class="btn btn-warning" onclick="reset()">🔄 重新輸入</button>
+                </div>
+            </div>
+
+            <!-- 篩選結果 -->
+            <div id="results" class="results"></div>
+
+            <!-- 手動新增科系 -->
+            <div id="manualSelectSection" class="manual-select-section"></div>
+
+            <!-- 評比科系 -->
+            <div id="compareSection" class="compare-section"></div>
+
+            <!-- 最終評估 -->
+            <div id="finalSection" class="final-section"></div>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let passedDepts = [];
+        let manuallyAddedDepts = [];
+        let compareList = [];
+        let finalList = [];
+        
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzvI60RHEzXPu_DnRbUfQjAr2NTp_isJ-zQ3fOB9Gr6djzqDiGZr0SCWCGUIw15KI3NEw/exec';
+
+        // JSONP 載入
+        function fetchJSONP(url) {
+            return new Promise((resolve, reject) => {
+                const cbName = 'gasCallback_' + Date.now();
+                const script = document.createElement('script');
+                let settled = false;
+
+                window[cbName] = function(data) {
+                    if (settled) return;
+                    settled = true;
+                    resolve(data);
+                    document.body.removeChild(script);
+                    delete window[cbName];
+                };
+
+                script.src = url + '?callback=' + cbName + '&referer=' + encodeURIComponent(location.hostname);
+                script.onerror = function() {
+                    if (settled) return;
+                    settled = true;
+                    reject(new Error('JSONP 請求失敗'));
+                    document.body.removeChild(script);
+                    delete window[cbName];
+                };
+
+                document.body.appendChild(script);
+
+                setTimeout(function() {
+                    if (settled) return;
+                    settled = true;
+                    reject(new Error('請求逾時（20秒）'));
+                    if (document.body.contains(script)) document.body.removeChild(script);
+                    delete window[cbName];
+                }, 20000);
+            });
+        }
+
+        // 從 GAS 載入資料
+        async function loadDataFromGoogleSheets() {
+            try {
+                console.log('🔄 載入資料中...');
+                const data = await fetchJSONP(GAS_URL);
+
+                if (data && data.error) {
+                    throw new Error(`GAS 拒絕請求：${data.error}`);
+                }
+
+                if (!Array.isArray(data)) {
+                    throw new Error('資料格式錯誤');
+                }
+
+                allData = data.map(row => {
+                    const strRow = {};
+                    Object.keys(row).forEach(k => {
+                        strRow[k] = (row[k] === null || row[k] === undefined) ? '' : String(row[k]);
+                    });
+                    return strRow;
+                });
+
+                console.log('✅ 資料載入完成！共', allData.length, '筆');
+
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('inputSection').style.display = 'block';
+                document.getElementById('schoolSection').style.display = 'block';
+
+                displaySchoolOptions();
+
+            } catch (error) {
+                console.error('❌ 載入資料失敗:', error);
+                document.getElementById('loadingMessage').innerHTML = `
+                    <div style="color: #dc3545;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+                        <div>資料載入失敗！</div>
+                        <div style="font-size: 14px; margin-top: 10px; color: #666;">錯誤訊息：${error.message}</div>
+                        <div style="margin-top: 20px;">
+                            <button onclick="document.getElementById('csvFileInput').click()" class="btn btn-warning" style="font-size: 16px; padding: 12px 30px;">
+                                📁 手動上傳CSV資料檔
+                            </button>
+                            <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleCSVUpload(event)">
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button onclick="location.reload()" class="btn btn-primary" style="font-size: 16px; padding: 12px 30px;">
+                                🔄 重新整理頁面
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // 處理CSV上傳
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('loadingMessage').innerHTML = `
+                <div style="color: #667eea;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+                    <div>正在讀取CSV檔案...</div>
+                </div>
+            `;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split('\n').filter(line => line.trim());
+                    
+                    if (lines.length < 2) {
+                        throw new Error('CSV檔案格式錯誤：資料不足');
+                    }
+                    
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                    allData = [];
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = parseCSVLine(lines[i]);
+                        if (values.length === 0) continue;
+                        
+                        const row = {};
+                        headers.forEach((header, idx) => {
+                            row[header] = values[idx] ? String(values[idx]).trim() : '';
+                        });
+                        allData.push(row);
+                    }
+                    
+                    console.log('✅ CSV資料載入完成！共', allData.length, '筆');
+                    
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    document.getElementById('inputSection').style.display = 'block';
+                    document.getElementById('schoolSection').style.display = 'block';
+                    displaySchoolOptions();
+                    
+                } catch (error) {
+                    console.error('❌ CSV解析失敗:', error);
+                    document.getElementById('loadingMessage').innerHTML = `
+                        <div style="color: #dc3545;">
+                            <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+                            <div>CSV檔案解析失敗！</div>
+                            <div style="font-size: 14px; margin-top: 10px; color: #666;">錯誤訊息：${error.message}</div>
+                            <div style="margin-top: 20px;">
+                                <button onclick="document.getElementById('csvFileInput').click()" class="btn btn-warning">
+                                    📁 重新上傳CSV
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            };
+            
+            reader.onerror = function() {
+                document.getElementById('loadingMessage').innerHTML = `
+                    <div style="color: #dc3545;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+                        <div>檔案讀取失敗！請重試。</div>
+                        <div style="margin-top: 20px;">
+                            <button onclick="document.getElementById('csvFileInput').click()" class="btn btn-warning">
+                                📁 重新上傳CSV
+                            </button>
+                        </div>
+                    </div>
+                `;
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        }
+        
+        // 解析CSV行（處理引號內的逗號）
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim());
+            return result.map(v => v.replace(/^"|"$/g, ''));
+        }
+
+        // 啟動載入
+        window.addEventListener('load', loadDataFromGoogleSheets);
+
+        // 顯示學校選項
+        function displaySchoolOptions() {
+            const schools = [...new Set(allData.map(d => d['學校']))].filter(s => s);
+            schools.sort((a, b) => {
+                const aIsNational = a.startsWith('國立');
+                const bIsNational = b.startsWith('國立');
+                if (aIsNational && !bIsNational) return -1;
+                if (!aIsNational && bIsNational) return 1;
+                return a.localeCompare(b, 'zh-TW');
+            });
+            
+            const container = document.getElementById('schoolCheckboxes');
+            container.innerHTML = schools.map(school => `
+                <label class="school-checkbox">
+                    <input type="checkbox" value="${school}" class="school-checkbox-input">
+                    ${school}
+                </label>
+            `).join('');
+        }
+        
+        function toggleAllSchools() {
+            const checked = document.getElementById('selectAllSchools').checked;
+            document.querySelectorAll('.school-checkbox-input').forEach(cb => cb.checked = checked);
+        }
+        
+        // 解析篩選條件
+        function parseScreeningCondition(str, scores) {
+            str = String(str).trim();
+            if (str.includes('+')) {
+                const requiredMatch = str.match(/=\s*([\d.]+)\s*$/);
+                if (!requiredMatch) return null;
+                const required = parseFloat(requiredMatch[1]);
+                const subjectPart = str.split('=')[0];
+                const subjects = subjectPart.split('+').map(s => s.trim());
+                let sum = 0;
+                subjects.forEach(subj => {
+                    sum += getScoreBySubject(subj, scores);
+                });
+                return { userScore: sum, required };
+            } else {
+                const matches = str.match(/([\u4e00-\u9fa5A-Za-z]+)\s*=\s*([\d.]+)/);
+                if (!matches) return null;
+                const userScore = getScoreBySubject(matches[1], scores);
+                const required = parseFloat(matches[2]);
+                return { userScore, required };
+            }
+        }
+
+        function filterDepartments() {
+            const scores = {
+                chinese: parseFloat(document.getElementById('chinese').value) || 0,
+                english: parseFloat(document.getElementById('english').value) || 0,
+                mathA: parseFloat(document.getElementById('mathA').value) || 0,
+                mathB: parseFloat(document.getElementById('mathB').value) || 0,
+                social: parseFloat(document.getElementById('social').value) || 0,
+                science: parseFloat(document.getElementById('science').value) || 0,
+                listening: document.getElementById('listening').value || ''
+            };
+            
+            const selectedSchools = Array.from(document.querySelectorAll('.school-checkbox-input:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedSchools.length === 0) {
+                alert('請至少選擇一所學校！');
+                return;
+            }
+            
+            passedDepts = allData.filter(dept => {
+                if (!selectedSchools.includes(dept['學校'])) return false;
+                
+                dept.isNew = !dept['114招收'] || dept['114招收'].trim() === '';
+                dept.changes = detectChanges(dept);
+
+                const screeningFields = [
+                    dept['114篩選一'], dept['114篩選二'], dept['114篩選三'],
+                    dept['114篩選四'], dept['114篩選五']
+                ].filter(s => s && s.trim() !== '');
+                
+                if (screeningFields.length === 0) {
+                    if (dept.isNew) {
+                        dept.type = 'medium';
+                        return true;
+                    }
+                    return false;
+                }
+                
+                const diffs = [];
+                for (let i = 0; i < screeningFields.length; i++) {
+                    const parsed = parseScreeningCondition(screeningFields[i], scores);
+                    if (!parsed) continue;
+                    diffs.push(parsed.userScore - parsed.required);
+                }
+                
+                if (diffs.length === 0) return false;
+
+                const lastDiff = diffs[diffs.length - 1];
+                const prevDiffs = diffs.slice(0, diffs.length - 1);
+                const allPrevPass = prevDiffs.every(d => d >= 0);
+
+                if (allPrevPass && lastDiff > 0) {
+                    dept.type = 'high';
+                    return true;
+                }
+                if (allPrevPass && lastDiff === 0) {
+                    dept.type = 'medium';
+                    return true;
+                }
+
+                const failCount = diffs.filter(d => d < 0).length;
+                const exactlyOneMissCount = diffs.filter(d => d === -1).length;
+                if (failCount === 1 && exactlyOneMissCount === 1) {
+                    dept.type = 'risky';
+                    return true;
+                }
+                
+                return false;
+            });
+            
+            const highDepts = passedDepts.filter(d => d.type === 'high');
+            const mediumDepts = passedDepts.filter(d => d.type === 'medium');
+            const riskyDepts = passedDepts.filter(d => d.type === 'risky');
+            
+            displayResults(highDepts, mediumDepts, riskyDepts);
+            
+            document.getElementById('results').style.display = 'block';
+            displayManualSection();
+            document.getElementById('results').scrollIntoView({behavior: 'smooth'});
+        }
+        
+        function getScoreBySubject(subject, scores) {
+            const map = {
+                '國': scores.chinese, '國文': scores.chinese,
+                '英': scores.english, '英文': scores.english,
+                '數A': scores.mathA, '數學A': scores.mathA,
+                '數B': scores.mathB, '數學B': scores.mathB,
+                '社': scores.social, '社會': scores.social,
+                '自': scores.science, '自然': scores.science
+            };
+            return map[subject] || 0;
+        }
+        
+        function detectChanges(dept) {
+            const changes = [];
+            
+            const has114Data = dept['114招收'] && dept['114招收'].trim() !== '';
+            
+            if (!has114Data) {
+                return ['新科系/組別'];
+            }
+            
+            if (dept['115招收'] && dept['115招收'] !== dept['114招收']) {
+                changes.push('招生名額變動');
+            }
+            
+            const ratioFields = ['倍率國文', '倍率英文', '倍率數A', '倍率數B', '倍率社會', '倍率自然', '倍率相加項'];
+            ratioFields.forEach(field => {
+                const val115 = dept[`115${field}`];
+                const val114 = dept[`114${field}`];
+                if (val115 && val114 && val115 !== val114 && val114.trim() !== '') {
+                    changes.push(`${field.replace('倍率', '')}倍率變動`);
+                }
+            });
+            
+            return changes;
+        }
+        
+        function displayResults(highDepts, mediumDepts, riskyDepts) {
+            document.getElementById('results').innerHTML = `
+                <div class="summary">
+                    <div>篩選結果</div>
+                    <div class="summary-number">${highDepts.length + mediumDepts.length + riskyDepts.length}</div>
+                    <div>個符合條件的校系</div>
+                </div>
+
+                ${generateResultTable('依據114年可通過之科系 (可付費取得115年度通過機率的進階分析)', highDepts, 'high', '#28a745')}
+                ${generateResultTable('依據114年因同級分有機會通過之科系 (可付費取得115年度通過機率的進階分析)', mediumDepts, 'medium', '#17a2b8')}
+                ${generateResultTable('碰運氣的科系 (114年只差一級分沒通過，可查閱今年條件有無變動、或評估過往歷史級分去決定要不要申請)', riskyDepts, 'risky', '#ff9800')}
+            `;
+        }
+        
+        function generateResultTable(title, depts, type, color) {
+            const show = (val) => val && val.trim() !== '' ? val : '--';
+            const icon = type === 'high' ? '✅' : (type === 'medium' ? '🟡' : '🎲');
+            
+            return `
+                <div class="section">
+                    <h3 style="color: ${color};">${icon} ${title}（共 ${depts.length} 個）</h3>
+                    <div class="results-table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">勾選</th>
+                                    <th>學校</th>
+                                    <th>科系</th>
+                                    <th>代碼</th>
+                                    <th>甄試日期</th>
+                                    <th>招收人數<br>114→115</th>
+                                    <th>115英聽</th>
+                                    <th>114篩選結果</th>
+                                    <th>114超額</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${depts.map((dept, idx) => {
+                                    const screening = [
+                                        dept['114篩選一'], dept['114篩選二'], dept['114篩選三'],
+                                        dept['114篩選四'], dept['114篩選五']
+                                    ].filter(s => s && s.trim() !== '').join(' → ');
+                                    
+                                    const recruit114 = show(dept['114招收']);
+                                    const recruit115 = show(dept['115招收']);
+                                    const recruitChange = (recruit114 !== '--' && recruit115 !== '--' && recruit114 !== recruit115) ?
+                                        `<span style="color: #dc3545; font-weight: 600;">${recruit114}→${recruit115}</span>` :
+                                        `${recruit114}→${recruit115}`;
+                                    
+                                    const excess = dept['114超額篩選'] || '-';
+                                    const excessText = excess === '有' ? 
+                                        '<span style="color: #d9534f; font-weight: 600;">有</span>' : 
+                                        (excess === '無' ? '<span style="color: #28a745;">無</span>' : '-');
+                                    
+                                    return `
+                                        <tr>
+                                            <td class="checkbox-cell"><input type="checkbox" class="dept-select" data-type="${type}" data-index="${idx}"></td>
+                                            <td>${dept['學校']}</td>
+                                            <td>${dept['科系']}</td>
+                                            <td>${dept['代碼']}</td>
+                                            <td>${show(dept['甄試日期'])}</td>
+                                            <td>${recruitChange}</td>
+                                            <td>${show(dept['115英聽'])}</td>
+                                            <td>${screening || '<span style="color:#6c757d;font-size:12px;">新科系/組別/重新招生之科系</span>'}</td>
+                                            <td>${excessText}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function displayManualSection() {
+            const schools = [...new Set(allData.map(d => d['學校']))].filter(s => s).sort();
+            
+            document.getElementById('manualSelectSection').innerHTML = `
+                <h3>🎯 手動新增您感興趣的校系（最多6個）</h3>
+                <p style="margin-bottom: 15px; color: #666;">如果有篩選結果之外想考慮的校系，可以在這裡手動新增</p>
+                <div class="manual-select-grid">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">選擇學校</label>
+                        <select id="manualSchoolSelect" onchange="updateManualDeptOptions()" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;">
+                            <option value="">-- 請選擇學校 --</option>
+                            ${schools.map(s => `<option value="${s}">${s}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">選擇科系</label>
+                        <select id="manualDeptSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;">
+                            <option value="">-- 請先選擇學校 --</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success" onclick="addManualDepartment()">➕ 新增</button>
+                </div>
+                <div id="manualAddedList" style="display: none;">
+                    <h4 style="margin-bottom: 10px;">已手動新增的科系（<span id="manualCount">0</span>/6）</h4>
+                    <div id="manualAddedItems"></div>
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-primary" onclick="proceedToCompare()" style="font-size: 18px; padding: 15px 40px;">
+                        🏆 進入評比科系（最多16個）
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('manualSelectSection').style.display = 'block';
+        }
+        
+        function updateManualDeptOptions() {
+            const school = document.getElementById('manualSchoolSelect').value;
+            const deptSelect = document.getElementById('manualDeptSelect');
+            
+            if (!school) {
+                deptSelect.innerHTML = '<option value="">-- 請先選擇學校 --</option>';
+                return;
+            }
+            
+            const depts = allData.filter(d => d['學校'] === school);
+            deptSelect.innerHTML = '<option value="">-- 請選擇科系 --</option>' +
+                depts.map((dept, idx) => 
+                    `<option value="${idx}">${dept['科系']} (${dept['代碼']})</option>`
+                ).join('');
+        }
+        
+        function addManualDepartment() {
+            if (manuallyAddedDepts.length >= 6) {
+                alert('❌ 最多只能手動新增6個科系！');
+                return;
+            }
+            
+            const school = document.getElementById('manualSchoolSelect').value;
+            const deptIdx = document.getElementById('manualDeptSelect').value;
+            
+            if (!school || !deptIdx) {
+                alert('請選擇學校和科系！');
+                return;
+            }
+            
+            const dept = allData.filter(d => d['學校'] === school)[parseInt(deptIdx)];
+            
+            if (manuallyAddedDepts.some(d => d['代碼'] === dept['代碼'])) {
+                alert('此科系已在清單中！');
+                return;
+            }
+            
+            dept.type = 'manual';
+            dept.isNew = !dept['114招收'] || dept['114招收'].trim() === '';
+            dept.changes = detectChanges(dept);
+            
+            manuallyAddedDepts.push(dept);
+            updateManualAddedList();
+            
+            document.getElementById('manualSchoolSelect').value = '';
+            document.getElementById('manualDeptSelect').innerHTML = '<option value="">-- 請先選擇學校 --</option>';
+        }
+        
+        function updateManualAddedList() {
+            const listDiv = document.getElementById('manualAddedList');
+            const itemsDiv = document.getElementById('manualAddedItems');
+            const countSpan = document.getElementById('manualCount');
+            
+            countSpan.textContent = manuallyAddedDepts.length;
+            
+            if (manuallyAddedDepts.length === 0) {
+                listDiv.style.display = 'none';
+                return;
+            }
+            
+            listDiv.style.display = 'block';
+            itemsDiv.innerHTML = manuallyAddedDepts.map((dept, idx) => `
+                <div class="manual-added-item">
+                    <span><strong>${dept['學校']}</strong> - ${dept['科系']} (${dept['代碼']})</span>
+                    <button onclick="removeManualDepartment(${idx})">🗑️ 移除</button>
+                </div>
+            `).join('');
+        }
+        
+        function removeManualDepartment(idx) {
+            manuallyAddedDepts.splice(idx, 1);
+            updateManualAddedList();
+        }
+        
+        function proceedToCompare() {
+            const selectedFromFilter = Array.from(document.querySelectorAll('.dept-select:checked'))
+                .map(cb => {
+                    const type = cb.dataset.type;
+                    const idx = parseInt(cb.dataset.index);
+                    const depts = passedDepts.filter(d => d.type === type);
+                    return depts[idx];
+                });
+            
+            compareList = [...selectedFromFilter, ...manuallyAddedDepts];
+            
+            if (compareList.length === 0) {
+                alert('請至少勾選一個科系或手動新增科系！');
+                return;
+            }
+            
+            if (compareList.length > 16) {
+                alert(`最多只能評比16個科系！\n目前選擇了 ${compareList.length} 個，請取消 ${compareList.length - 16} 個。`);
+                return;
+            }
+            
+            displayCompareTable();
+            document.getElementById('compareSection').style.display = 'block';
+            document.getElementById('compareSection').scrollIntoView({behavior: 'smooth'});
+        }
+        
+        function displayCompareTable() {
+            const show = (val) => val && val.trim() !== '' ? val : '--';
+            
+            document.getElementById('compareSection').innerHTML = `
+                <div class="section" style="border: 3px solid #764ba2; background: #f3e5f5;">
+                    <h3 style="color: #764ba2;">🏆 評比科系（請從中勾選最多6個進入最終評估）</h3>
+                    <div class="results-table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">勾選</th>
+                                    <th>來源</th>
+                                    <th>學校</th>
+                                    <th>科系</th>
+                                    <th>代碼</th>
+                                    <th>甄試日期</th>
+                                    <th>招收人數<br>114→115</th>
+                                    <th>115英聽</th>
+                                    <th>114篩選結果</th>
+                                    <th>114超額</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${compareList.map((dept, idx) => {
+                                    const screening = [
+                                        dept['114篩選一'], dept['114篩選二'], dept['114篩選三'],
+                                        dept['114篩選四'], dept['114篩選五']
+                                    ].filter(s => s && s.trim() !== '').join(' → ');
+                                    
+                                    const sourceTag = dept.type === 'high' ? 
+                                        '<span style="color: #28a745; font-weight: 600;">✅ 高機率</span>' :
+                                        (dept.type === 'medium' ? 
+                                            '<span style="color: #17a2b8; font-weight: 600;">🟡 中度機率</span>' :
+                                            (dept.type === 'risky' ? 
+                                                '<span style="color: #ff9800; font-weight: 600;">🎲 碰運氣</span>' :
+                                                '<span style="color: #ffc107; font-weight: 600;">🎯 手動新增</span>'));
+                                    
+                                    const recruit114 = show(dept['114招收']);
+                                    const recruit115 = show(dept['115招收']);
+                                    const recruitChange = (recruit114 !== '--' && recruit115 !== '--' && recruit114 !== recruit115) ?
+                                        `<span style="color: #dc3545; font-weight: 600;">${recruit114}→${recruit115}</span>` :
+                                        `${recruit114}→${recruit115}`;
+                                    
+                                    const excess = dept['114超額篩選'] || '-';
+                                    const excessText = excess === '有' ? 
+                                        '<span style="color: #d9534f; font-weight: 600;">有</span>' : 
+                                        (excess === '無' ? '<span style="color: #28a745;">無</span>' : '-');
+                                    
+                                    // 115科目倍率
+                                    const subjects115 = [];
+                                    const subjectInfo = [
+                                        { standard: '115國文', ratio: '115倍率國文', label: '國文' },
+                                        { standard: '115英文', ratio: '115倍率英文', label: '英文' },
+                                        { standard: '115數A', ratio: '115倍率數A', label: '數A' },
+                                        { standard: '115數B', ratio: '115倍率數B', label: '數B' },
+                                        { standard: '115社會', ratio: '115倍率社會', label: '社會' },
+                                        { standard: '115自然', ratio: '115倍率自然', label: '自然' }
+                                    ];
+                                    
+                                    subjectInfo.forEach(field => {
+                                        const standard = dept[field.standard];
+                                        const ratio = dept[field.ratio];
+                                        if ((standard && standard.trim() !== '' && standard !== '--') || 
+                                            (ratio && ratio.trim() !== '' && ratio !== '--')) {
+                                            const standardText = (standard && standard.trim() !== '' && standard !== '--') ? standard : '--';
+                                            const ratioText = (ratio && ratio.trim() !== '' && ratio !== '--') ? ratio : '--';
+                                            subjects115.push(`${field.label}(${standardText}/${ratioText})`);
+                                        }
+                                    });
+                                    
+                                    // 115相加項 - 修正格式，只使用一個括號
+                                    const addRatio115 = dept['115倍率相加項'];
+                                    const addSubjects115 = dept['115相加項'] || '';
+                                    if (addRatio115 && addRatio115.trim() !== '' && addRatio115 !== '--') {
+                                        const subjectsInBracket = addSubjects115 ? ` (${addSubjects115})` : '';
+                                        subjects115.push(`相加項(${addRatio115}${subjectsInBracket})`);
+                                    }
+                                    
+                                    const subjects115Text = subjects115.length > 0 ? subjects115.join('、') : '--';
+                                    
+                                    // 114科目倍率
+                                    const subjects114 = [];
+                                    const subjectInfo114 = [
+                                        { standard: '114國文', ratio: '114倍率國文', label: '國文' },
+                                        { standard: '114英文', ratio: '114倍率英文', label: '英文' },
+                                        { standard: '114數A', ratio: '114倍率數A', label: '數A' },
+                                        { standard: '114數B', ratio: '114倍率數B', label: '數B' },
+                                        { standard: '114社會', ratio: '114倍率社會', label: '社會' },
+                                        { standard: '114自然', ratio: '114倍率自然', label: '自然' }
+                                    ];
+                                    
+                                    subjectInfo114.forEach(field => {
+                                        const standard = dept[field.standard];
+                                        const ratio = dept[field.ratio];
+                                        if ((standard && standard.trim() !== '' && standard !== '--') || 
+                                            (ratio && ratio.trim() !== '' && ratio !== '--')) {
+                                            const standardText = (standard && standard.trim() !== '' && standard !== '--') ? standard : '--';
+                                            const ratioText = (ratio && ratio.trim() !== '' && ratio !== '--') ? ratio : '--';
+                                            subjects114.push(`${field.label}(${standardText}/${ratioText})`);
+                                        }
+                                    });
+                                    
+                                    // 114相加項
+                                    const addRatio114 = dept['114倍率相加項'];
+                                    const addSubjects114 = dept['114相加項'] || '';
+                                    if (addRatio114 && addRatio114.trim() !== '' && addRatio114 !== '--') {
+                                        const subjectsInBracket = addSubjects114 ? ` (${addSubjects114})` : '';
+                                        subjects114.push(`相加項(${addRatio114}${subjectsInBracket})`);
+                                    }
+                                    
+                                    const subjects114Text = subjects114.length > 0 ? subjects114.join('、') : '--';
+                                    
+                                    const subjects115Row = `
+                                        <tr style="background: #f0f8ff;">
+                                            <td colspan="10" style="padding-left: 60px; font-size: 13px; color: #555;">
+                                                <strong>115科目與倍率：</strong>${subjects115Text}
+                                            </td>
+                                        </tr>
+                                    `;
+                                    
+                                    const subjects114Row = `
+                                        <tr style="background: #f0f8ff;">
+                                            <td colspan="10" style="padding-left: 60px; font-size: 13px; color: #555;">
+                                                <strong>114科目與倍率：</strong>${subjects114Text}
+                                            </td>
+                                        </tr>
+                                    `;
+                                    
+                                    // 115同級分超額篩選方式
+                                    const excessMethod = dept['115同級分超額篩選方式'] || dept['115同級分(分數)超額篩選方式'] || '';
+                                    const excessMethodRow = excessMethod && excessMethod.trim() !== '' && excessMethod !== '--' ? `
+                                        <tr style="background: #fff9e6;">
+                                            <td colspan="10" style="padding-left: 60px; font-size: 13px; color: #555;">
+                                                <strong>115同級分(分數)超額篩選方式：</strong>${excessMethod}
+                                            </td>
+                                        </tr>
+                                    ` : '';
+                                    
+                                    return `
+                                        <tr>
+                                            <td class="checkbox-cell"><input type="checkbox" class="compare-select" data-index="${idx}"></td>
+                                            <td>${sourceTag}</td>
+                                            <td>${dept['學校']}</td>
+                                            <td>${dept['科系']}</td>
+                                            <td>${dept['代碼']}</td>
+                                            <td>${show(dept['甄試日期'])}</td>
+                                            <td>${recruitChange}</td>
+                                            <td>${show(dept['115英聽'])}</td>
+                                            <td>${screening || '-'}</td>
+                                            <td>${excessText}</td>
+                                        </tr>
+                                        ${subjects115Row}
+                                        ${subjects114Row}
+                                        ${excessMethodRow}
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn btn-success" onclick="proceedToFinal()" style="font-size: 18px; padding: 15px 40px;">
+                            ✅ 確定最終6個科系
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function proceedToFinal() {
+            const selected = Array.from(document.querySelectorAll('.compare-select:checked'))
+                .map(cb => compareList[parseInt(cb.dataset.index)]);
+            
+            if (selected.length === 0) {
+                alert('請至少勾選一個科系！');
+                return;
+            }
+            
+            if (selected.length > 6) {
+                alert(`最多只能選擇6個科系進行最終評估！\n目前勾選了 ${selected.length} 個，請取消 ${selected.length - 6} 個。`);
+                return;
+            }
+            
+            finalList = selected;
+            displayFinalTable();
+            document.getElementById('finalSection').style.display = 'block';
+            document.getElementById('finalSection').scrollIntoView({behavior: 'smooth'});
+        }
+        
+        function displayFinalTable() {
+            const show = (val) => val && val.trim() !== '' ? val : '--';
+            
+            const userScores = {
+                chinese: document.getElementById('chinese').value || '--',
+                english: document.getElementById('english').value || '--',
+                mathA: document.getElementById('mathA').value || '--',
+                mathB: document.getElementById('mathB').value || '--',
+                social: document.getElementById('social').value || '--',
+                science: document.getElementById('science').value || '--',
+                listening: document.getElementById('listening').value || '--'
+            };
+            
+            document.getElementById('finalSection').innerHTML = `
+                <div class="section" style="border: 3px solid #28a745; background: #e8f5e9;">
+                    <h3 style="color: #28a745;">🎯 最終評估科系（最多6個）</h3>
+                    
+                    <div class="results-table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>序號</th>
+                                    <th>來源</th>
+                                    <th>學校</th>
+                                    <th>科系</th>
+                                    <th>代碼</th>
+                                    <th>甄試日期</th>
+                                    <th>招收人數<br>114→115</th>
+                                    <th>115英聽</th>
+                                    <th>114篩選結果</th>
+                                    <th>114超額</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${finalList.map((dept, idx) => {
+                                    const screening = [
+                                        dept['114篩選一'], dept['114篩選二'], dept['114篩選三'],
+                                        dept['114篩選四'], dept['114篩選五']
+                                    ].filter(s => s && s.trim() !== '').join(' → ');
+                                    
+                                    const sourceTag = dept.type === 'high' ? 
+                                        '<span style="color: #28a745; font-weight: 600;">✅ 高機率</span>' :
+                                        (dept.type === 'medium' ? 
+                                            '<span style="color: #17a2b8; font-weight: 600;">🟡 中度機率</span>' :
+                                            (dept.type === 'risky' ? 
+                                                '<span style="color: #ff9800; font-weight: 600;">🎲 碰運氣</span>' :
+                                                '<span style="color: #ffc107; font-weight: 600;">🎯 手動新增</span>'));
+                                    
+                                    const recruit114 = show(dept['114招收']);
+                                    const recruit115 = show(dept['115招收']);
+                                    const recruitChange = (recruit114 !== '--' && recruit115 !== '--' && recruit114 !== recruit115) ?
+                                        `<span style="color: #dc3545; font-weight: 600;">${recruit114}→${recruit115}</span>` :
+                                        `${recruit114}→${recruit115}`;
+                                    
+                                    const excess = dept['114超額篩選'] || '-';
+                                    const excessText = excess === '有' ? 
+                                        '<span style="color: #d9534f; font-weight: 600;">有</span>' : 
+                                        (excess === '無' ? '<span style="color: #28a745;">無</span>' : '-');
+                                    
+                                    // 115科目倍率
+                                    const subjects115 = [];
+                                    const subjectInfo = [
+                                        { standard: '115國文', ratio: '115倍率國文', label: '國文' },
+                                        { standard: '115英文', ratio: '115倍率英文', label: '英文' },
+                                        { standard: '115數A', ratio: '115倍率數A', label: '數A' },
+                                        { standard: '115數B', ratio: '115倍率數B', label: '數B' },
+                                        { standard: '115社會', ratio: '115倍率社會', label: '社會' },
+                                        { standard: '115自然', ratio: '115倍率自然', label: '自然' }
+                                    ];
+                                    
+                                    subjectInfo.forEach(field => {
+                                        const standard = dept[field.standard];
+                                        const ratio = dept[field.ratio];
+                                        if ((standard && standard.trim() !== '' && standard !== '--') || 
+                                            (ratio && ratio.trim() !== '' && ratio !== '--')) {
+                                            const standardText = (standard && standard.trim() !== '' && standard !== '--') ? standard : '--';
+                                            const ratioText = (ratio && ratio.trim() !== '' && ratio !== '--') ? ratio : '--';
+                                            subjects115.push(`${field.label}(${standardText}/${ratioText})`);
+                                        }
+                                    });
+                                    
+                                    // 115相加項 - 修正格式，只使用一個括號
+                                    const addRatio115 = dept['115倍率相加項'];
+                                    const addSubjects115 = dept['115相加項'] || '';
+                                    if (addRatio115 && addRatio115.trim() !== '' && addRatio115 !== '--') {
+                                        const subjectsInBracket = addSubjects115 ? ` (${addSubjects115})` : '';
+                                        subjects115.push(`相加項(${addRatio115}${subjectsInBracket})`);
+                                    }
+                                    
+                                    const subjects115Text = subjects115.length > 0 ? subjects115.join('、') : '--';
+                                    
+                                    // 114科目倍率
+                                    const subjects114 = [];
+                                    const subjectInfo114 = [
+                                        { standard: '114國文', ratio: '114倍率國文', label: '國文' },
+                                        { standard: '114英文', ratio: '114倍率英文', label: '英文' },
+                                        { standard: '114數A', ratio: '114倍率數A', label: '數A' },
+                                        { standard: '114數B', ratio: '114倍率數B', label: '數B' },
+                                        { standard: '114社會', ratio: '114倍率社會', label: '社會' },
+                                        { standard: '114自然', ratio: '114倍率自然', label: '自然' }
+                                    ];
+                                    
+                                    subjectInfo114.forEach(field => {
+                                        const standard = dept[field.standard];
+                                        const ratio = dept[field.ratio];
+                                        if ((standard && standard.trim() !== '' && standard !== '--') || 
+                                            (ratio && ratio.trim() !== '' && ratio !== '--')) {
+                                            const standardText = (standard && standard.trim() !== '' && standard !== '--') ? standard : '--';
+                                            const ratioText = (ratio && ratio.trim() !== '' && ratio !== '--') ? ratio : '--';
+                                            subjects114.push(`${field.label}(${standardText}/${ratioText})`);
+                                        }
+                                    });
+                                    
+                                    // 114相加項
+                                    const addRatio114 = dept['114倍率相加項'];
+                                    const addSubjects114 = dept['114相加項'] || '';
+                                    if (addRatio114 && addRatio114.trim() !== '' && addRatio114 !== '--') {
+                                        const subjectsInBracket = addSubjects114 ? ` (${addSubjects114})` : '';
+                                        subjects114.push(`相加項(${addRatio114}${subjectsInBracket})`);
+                                    }
+                                    
+                                    const subjects114Text = subjects114.length > 0 ? subjects114.join('、') : '--';
+                                    
+                                    const subjects115Row = `
+                                        <tr style="background: #f0f8ff;">
+                                            <td colspan="10" style="padding-left: 60px; font-size: 13px; color: #555;">
+                                                <strong>115科目與倍率：</strong>${subjects115Text}
+                                            </td>
+                                        </tr>
+                                    `;
+                                    
+                                    const subjects114Row = `
+                                        <tr style="background: #f0f8ff;">
+                                            <td colspan="10" style="padding-left: 60px; font-size: 13px; color: #555;">
+                                                <strong>114科目與倍率：</strong>${subjects114Text}
+                                            </td>
+                                        </tr>
+                                    `;
+                                    
+                                    // 115同級分超額篩選方式
+                                    const excessMethod = dept['115同級分超額篩選方式'] || dept['115同級分(分數)超額篩選方式'] || '';
+                                    const excessMethodRow = excessMethod && excessMethod.trim() !== '' && excessMethod !== '--' ? `
+                                        <tr style="background: #fff9e6;">
+                                            <td colspan="10" style="padding-left: 60px; font-size: 13px; color: #555;">
+                                                <strong>115同級分(分數)超額篩選方式：</strong>${excessMethod}
+                                            </td>
+                                        </tr>
+                                    ` : '';
+                                    
+                                    return `
+                                        <tr>
+                                            <td style="text-align: center; font-weight: 600; color: #667eea;">${idx + 1}</td>
+                                            <td>${sourceTag}</td>
+                                            <td>${dept['學校']}</td>
+                                            <td>${dept['科系']}</td>
+                                            <td>${dept['代碼']}</td>
+                                            <td>${show(dept['甄試日期'])}</td>
+                                            <td>${recruitChange}</td>
+                                            <td>${show(dept['115英聽'])}</td>
+                                            <td>${screening || '<span style="color:#6c757d;font-size:12px;">新科系/組別/重新招生之科系</span>'}</td>
+                                            <td>${excessText}</td>
+                                        </tr>
+                                        ${subjects115Row}
+                                        ${subjects114Row}
+                                        ${excessMethodRow}
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="payment-notice">
+                        <h3>💳 人工落點分析-付費版申請</h3>
+                        <p style="margin-top: 15px;">
+                            請複製下方完整資料，並回到Google表單進行付款，請於付款頁面的『備註欄』填上您選取的六個學校科系(包含科系代碼)＋個人學測分數＋英聽成績。
+                        </p>
+                        <div style="margin-top: 15px; text-align: center;">
+                            <a href="https://forms.gle/oFQvZNbXEiSLVJSbA" target="_blank" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #dc3545, #c82333); color: white; font-size: 20px; font-weight: 700; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 15px rgba(220,53,69,0.4); letter-spacing: 1px;">
+                                📋 前往表單進行付款
+                            </a>
+                        </div>
+                        <div style="margin-top: 15px; padding: 12px; background: #fffbe6; border: 1px dashed #ffc107; border-radius: 8px; font-size: 15px; color: #333; font-weight: 600;">
+                            學測分數：國：${userScores.chinese}、英：${userScores.english}、數A：${userScores.mathA}、數B：${userScores.mathB}、社：${userScores.social}、自：${userScores.science}、英聽：${userScores.listening}
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px;">
+                            <h4 style="color: #333; margin-bottom: 10px;">📋 您選擇的科系清單：</h4>
+                            <ol style="margin-left: 20px; color: #333;">
+                                ${finalList.map(d => `<li><strong>${d['學校']}</strong> - ${d['科系']} (${d['代碼']})</li>`).join('')}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function reset() {
+            document.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
+            document.getElementById('listening').value = '';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('manualSelectSection').style.display = 'none';
+            document.getElementById('compareSection').style.display = 'none';
+            document.getElementById('finalSection').style.display = 'none';
+            document.querySelectorAll('.school-checkbox-input').forEach(cb => cb.checked = false);
+            document.getElementById('selectAllSchools').checked = false;
+            manuallyAddedDepts = [];
+            passedDepts = [];
+            compareList = [];
+            finalList = [];
+        }
+    </script>
+</body>
+</html>
