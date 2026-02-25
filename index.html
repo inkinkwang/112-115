@@ -320,73 +320,73 @@
     </div>
 
     <script>
-        let allData = [];
-        let passedDepts = [];
-        let manuallyAddedDepts = [];
-        let compareList = [];
-        let finalList = [];
-        
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyc-6J7dYvIC8Vn8S0I45uwCxehbAi8xGcwVxrjWffomoKupQLdXyLS9OfYyVMJHqcT/exec';
+let allData = [];
+let passedDepts = [];
+let manuallyAddedDepts = [];
+let compareList = [];
+let finalList = [];
 
-        // JSONP 載入
-        function fetchJSONP(url) {
-            return new Promise((resolve, reject) => {
-                const cbName = 'gasCallback_' + Date.now();
-                const script = document.createElement('script');
-                let settled = false;
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzWOZhONOsVXLSOf4p4fIxV0pKm7pdgB-lgxV474xx0VEUzAwrMmUjfgWO0Wm2IqnW2HA/exec";
 
-                window[cbName] = function(data) {
-                    if (settled) return;
-                    settled = true;
-                    resolve(data);
-                    document.body.removeChild(script);
-                    delete window[cbName];
-                };
+// 10 秒 timeout 控制器
+function fetchWithTimeout(url, timeout = 10000) {
+    return Promise.race([
+        fetch(url, { method: "GET", cache: "no-store" }),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("請求逾時")), timeout)
+        )
+    ]);
+}
 
-                script.src = url + '?callback=' + cbName;
-                script.onerror = function() {
-                    if (settled) return;
-                    settled = true;
-                    reject(new Error('JSONP 請求失敗'));
-                    document.body.removeChild(script);
-                    delete window[cbName];
-                };
+// 從 GAS 載入資料
+async function loadDataFromGoogleSheets() {
+    try {
+        console.log("🔄 從 Google Sheets 載入資料中...");
 
-                document.body.appendChild(script);
+        const response = await fetchWithTimeout(GAS_URL);
 
-                setTimeout(function() {
-                    if (settled) return;
-                    settled = true;
-                    reject(new Error('請求逾時（20秒）'));
-                    if (document.body.contains(script)) document.body.removeChild(script);
-                    delete window[cbName];
-                }, 20000);
-            });
+        if (!response.ok) {
+            throw new Error("HTTP 錯誤：" + response.status);
         }
 
-        // 從 GAS 載入資料
-        async function loadDataFromGoogleSheets() {
-            try {
-                console.log('🔄 載入資料中...');
-                const data = await fetchJSONP(GAS_URL);
+        const result = await response.json();
 
-                if (data && data.error) {
-                    throw new Error(`GAS 拒絕請求：${data.error}`);
-                }
+        if (!result.success) {
+            throw new Error(result.error || "API 回傳失敗");
+        }
 
-                if (!Array.isArray(data)) {
-                    throw new Error('資料格式錯誤');
-                }
+        if (!Array.isArray(result.data)) {
+            throw new Error("資料格式錯誤");
+        }
 
-                allData = data.map(row => {
-                    const strRow = {};
-                    Object.keys(row).forEach(k => {
-                        strRow[k] = (row[k] === null || row[k] === undefined) ? '' : String(row[k]);
-                    });
-                    return strRow;
-                });
+        // 統一轉字串
+        allData = result.data.map(row => {
+            const strRow = {};
+            Object.keys(row).forEach(k => {
+                strRow[k] = (row[k] === null || row[k] === undefined)
+                    ? ""
+                    : String(row[k]);
+            });
+            return strRow;
+        });
 
-                console.log('✅ 資料載入完成！共', allData.length, '筆');
+        console.log("✅ 資料載入完成！共", allData.length, "筆");
+
+        document.getElementById("status").innerText =
+            "資料載入成功，共 " + allData.length + " 筆";
+
+        initApp();  // 你原本後續初始化邏輯
+
+    } catch (error) {
+        console.warn("⚠️ 網路載入失敗：", error.message);
+
+        document.getElementById("status").innerText =
+            "網路載入失敗，請手動上傳 CSV";
+
+        document.getElementById("uploadSection").style.display = "block";
+    }
+}
+</script>
 
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('inputSection').style.display = 'block';
