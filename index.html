@@ -322,54 +322,46 @@
         // 已更換為最新的 GAS 網址
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwRHGv-u0mOAbTC1Vi-5gyOEVyKhVuNcocrkkkYkMc5JaPekyZGsmrlLS7LHDamvJpL8g/exec';
 
-        // JSONP 載入
-        function fetchJSONP(url) {
-            return new Promise((resolve, reject) => {
-                const cbName = 'gasCallback_' + Date.now();
-                const script = document.createElement('script');
-                let settled = false;
+        // 1. 改用標準 Fetch API 取得資料
+        async function fetchGAS(url) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20秒逾時
 
-                window[cbName] = function(data) {
-                    if (settled) return;
-                    settled = true;
-                    resolve(data);
-                    document.body.removeChild(script);
-                    delete window[cbName];
-                };
-
-                script.src = url + '?callback=' + cbName;
-                script.onerror = function() {
-                    if (settled) return;
-                    settled = true;
-                    reject(new Error('JSONP 請求失敗'));
-                    document.body.removeChild(script);
-                    delete window[cbName];
-                };
-
-                document.body.appendChild(script);
-
-                setTimeout(function() {
-                    if (settled) return;
-                    settled = true;
-                    reject(new Error('請求逾時（20秒）'));
-                    if (document.body.contains(script)) document.body.removeChild(script);
-                    delete window[cbName];
-                }, 20000);
-            });
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`伺服器回應錯誤 (${response.status})`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    throw new Error('請求逾時（20秒），請檢查網路連線或 GAS 伺服器狀態');
+                }
+                throw error;
+            }
         }
 
-        // 從 GAS 載入資料
+        // 2. 從 GAS 載入資料
         async function loadDataFromGoogleSheets() {
             try {
                 console.log('🔄 載入資料中...');
-                const data = await fetchJSONP(GAS_URL);
+                const data = await fetchGAS(GAS_URL);
 
                 if (data && data.error) {
                     throw new Error(`GAS 拒絕請求：${data.error}`);
                 }
 
                 if (!Array.isArray(data)) {
-                    throw new Error('資料格式錯誤');
+                    throw new Error('資料格式錯誤，預期為陣列格式');
                 }
 
                 allData = data.map(row => {
