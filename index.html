@@ -1080,7 +1080,18 @@
                 return;
             }
             
-            finalList = selected;
+            // 定義允許顯示在付費版申請的學校清單
+            const allowedSchools = [
+                '國立成功大學', '國立臺灣師範大學', '國立中央大學', '國立臺灣大學',
+                '國立政治大學', '國立中興大學', '東海大學', '元智大學',
+                '國立聯合大學', '國立臺北教育大學', '中山醫學大學', '中原大學',
+                '逢甲大學', '長庚大學', '國立中山大學', '國立台灣海洋大學',
+                '國立宜蘭大學', '國立屏東大學', '國立高雄師範大學'
+            ];
+            
+            // 篩選只包含允許的學校
+            finalList = selected.filter(dept => allowedSchools.includes(dept['學校']));
+            
             displayFinalTable();
             document.getElementById('finalSection').style.display = 'block';
             document.getElementById('finalSection').scrollIntoView({behavior: 'smooth'});
@@ -1260,7 +1271,7 @@
                     <div class="payment-notice">
                         <h3>💳 人工落點分析-付費版申請</h3>
                         <p style="margin-top: 15px;">
-                            請複製下方完整資料，並回到Google表單進行付款，請於付款頁面的『備註欄』填上您選取的六個學校科系(包含科系代碼)＋個人學測分數＋英聽成績。
+                            下方科系可進階付費取得人工分析,請回到Google表單進行付款,請於付款頁面的『備註欄』填上您想人工分析之學校科系(包含科系代碼)＋個人學測分數＋英聽成績。
                         </p>
                         <div style="margin-top: 15px; text-align: center;">
                             <a href="https://forms.gle/oFQvZNbXEiSLVJSbA" target="_blank" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #dc3545, #c82333); color: white; font-size: 20px; font-weight: 700; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 15px rgba(220,53,69,0.4); letter-spacing: 1px;">
