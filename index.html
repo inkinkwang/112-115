@@ -228,7 +228,6 @@
         </div>
         
         <div class="content">
-            <!-- 風險需知 -->
             <div class="section" style="border: 3px solid #dc3545; background: #fff5f5;">
                 <h3 style="color: #dc3545; margin-bottom: 15px;">⚠️ 風險需知與免責聲明 (請詳閱)</h3>
                 <div style="line-height: 1.8; color: #333; font-size: 14px;">
@@ -248,7 +247,6 @@
                 <div style="font-size: 14px; margin-top: 10px; color: #666;">請稍候，正在讀取資料中</div>
             </div>
 
-            <!-- 輸入成績區 -->
             <div id="inputSection" class="section" style="display: none;">
                 <h3>📝 步驟1：輸入您的學測成績</h3>
                 <div class="score-grid">
@@ -289,7 +287,6 @@
                 </div>
             </div>
 
-            <!-- 選擇學校區 -->
             <div id="schoolSection" class="section" style="display: none;">
                 <h3>🏫 步驟2：選擇學校（可複選）</h3>
                 <div class="select-all">
@@ -305,16 +302,12 @@
                 </div>
             </div>
 
-            <!-- 篩選結果 -->
             <div id="results" class="results"></div>
 
-            <!-- 手動新增科系 -->
             <div id="manualSelectSection" class="manual-select-section"></div>
 
-            <!-- 評比科系 -->
             <div id="compareSection" class="compare-section"></div>
 
-            <!-- 最終評估 -->
             <div id="finalSection" class="final-section"></div>
         </div>
     </div>
@@ -326,77 +319,48 @@
         let compareList = [];
         let finalList = [];
         
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyc-6J7dYvIC8Vn8S0I45uwCxehbAi8xGcwVxrjWffomoKupQLdXyLS9OfYyVMJHqcT/exec';
+        // 已更換為最新的 GAS 網址
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWOZhONOsVXLSOf4p4fIxV0pKm7pdgB-lgxV474xx0VEUzAwrMmUjfgWO0Wm2IqnW2HA/exec';
 
         // JSONP 載入
-<script>
-let allData = [];
-let passedDepts = [];
-let manuallyAddedDepts = [];
-let compareList = [];
-let finalList = [];
+        function fetchJSONP(url) {
+            return new Promise((resolve, reject) => {
+                const cbName = 'gasCallback_' + Date.now();
+                const script = document.createElement('script');
+                let settled = false;
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWOZhONOsVXLSOf4p4fIxV0pKm7pdgB-lgxV474xx0VEUzAwrMmUjfgWO0Wm2IqnW2HA/exec';
+                window[cbName] = function(data) {
+                    if (settled) return;
+                    settled = true;
+                    resolve(data);
+                    document.body.removeChild(script);
+                    delete window[cbName];
+                };
 
-// 10 秒 timeout 控制器
-function fetchWithTimeout(url, timeout = 10000) {
-    return Promise.race([
-        fetch(url, { method: "GET", cache: "no-store" }),
-        new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("請求逾時")), timeout)
-        )
-    ]);
-}
+                script.src = url + '?callback=' + cbName;
+                script.onerror = function() {
+                    if (settled) return;
+                    settled = true;
+                    reject(new Error('JSONP 請求失敗'));
+                    document.body.removeChild(script);
+                    delete window[cbName];
+                };
 
-// 從 GAS 載入資料
-async function loadDataFromGoogleSheets() {
-    try {
-        console.log("🔄 從 Google Sheets 載入資料中...");
+                document.body.appendChild(script);
 
-        const response = await fetchWithTimeout(GAS_URL);
-
-        if (!response.ok) {
-            throw new Error("HTTP 錯誤：" + response.status);
-        }
-
-        const result = await response.json();
-
-        if (!result.success) {
-            throw new Error(result.error || "API 回傳失敗");
-        }
-
-        if (!Array.isArray(result.data)) {
-            throw new Error("資料格式錯誤");
-        }
-
-        // 統一轉字串
-        allData = result.data.map(row => {
-            const strRow = {};
-            Object.keys(row).forEach(k => {
-                strRow[k] = (row[k] === null || row[k] === undefined)
-                    ? ""
-                    : String(row[k]);
+                setTimeout(function() {
+                    if (settled) return;
+                    settled = true;
+                    reject(new Error('請求逾時（20秒）'));
+                    if (document.body.contains(script)) document.body.removeChild(script);
+                    delete window[cbName];
+                }, 20000);
             });
-            return strRow;
-        });
+        }
 
-        console.log("✅ 資料載入完成！共", allData.length, "筆");
-
-        document.getElementById("status").innerText =
-            "資料載入成功，共 " + allData.length + " 筆";
-
-        initApp();  // 你原本後續初始化邏輯
-
-    } catch (error) {
-        console.warn("⚠️ 網路載入失敗：", error.message);
-
-        document.getElementById("status").innerText =
-            "網路載入失敗，請手動上傳 CSV";
-
-        document.getElementById("uploadSection").style.display = "block";
-    }
-}
-</script>            try {
+        // 從 GAS 載入資料
+        async function loadDataFromGoogleSheets() {
+            try {
                 console.log('🔄 載入資料中...');
                 const data = await fetchJSONP(GAS_URL);
 
