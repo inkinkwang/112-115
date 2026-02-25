@@ -320,13 +320,23 @@
     </div>
 
     <script>
+        let allData = [];
+        let passedDepts = [];
+        let manuallyAddedDepts = [];
+        let compareList = [];
+        let finalList = [];
+        
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyc-6J7dYvIC8Vn8S0I45uwCxehbAi8xGcwVxrjWffomoKupQLdXyLS9OfYyVMJHqcT/exec';
+
+        // JSONP 載入
+<script>
 let allData = [];
 let passedDepts = [];
 let manuallyAddedDepts = [];
 let compareList = [];
 let finalList = [];
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzWOZhONOsVXLSOf4p4fIxV0pKm7pdgB-lgxV474xx0VEUzAwrMmUjfgWO0Wm2IqnW2HA/exec";
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWOZhONOsVXLSOf4p4fIxV0pKm7pdgB-lgxV474xx0VEUzAwrMmUjfgWO0Wm2IqnW2HA/exec';
 
 // 10 秒 timeout 控制器
 function fetchWithTimeout(url, timeout = 10000) {
@@ -386,7 +396,27 @@ async function loadDataFromGoogleSheets() {
         document.getElementById("uploadSection").style.display = "block";
     }
 }
-</script>
+</script>            try {
+                console.log('🔄 載入資料中...');
+                const data = await fetchJSONP(GAS_URL);
+
+                if (data && data.error) {
+                    throw new Error(`GAS 拒絕請求：${data.error}`);
+                }
+
+                if (!Array.isArray(data)) {
+                    throw new Error('資料格式錯誤');
+                }
+
+                allData = data.map(row => {
+                    const strRow = {};
+                    Object.keys(row).forEach(k => {
+                        strRow[k] = (row[k] === null || row[k] === undefined) ? '' : String(row[k]);
+                    });
+                    return strRow;
+                });
+
+                console.log('✅ 資料載入完成！共', allData.length, '筆');
 
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('inputSection').style.display = 'block';
