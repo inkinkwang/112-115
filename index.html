@@ -2,8 +2,11 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>115年個人申請篩選器(免費版)</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -217,6 +220,253 @@
             padding: 40px;
             font-size: 18px;
             color: #667eea;
+        }
+        
+        /* ============================================
+           手機版響應式設計 (Mobile Responsive Design)
+           ============================================ */
+        
+        /* 平板裝置 (Tablet) - 768px 以下 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+                line-height: 1.3;
+            }
+            
+            .header p {
+                font-size: 13px;
+                line-height: 1.5;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .section h3 {
+                font-size: 18px;
+                margin-bottom: 15px;
+            }
+            
+            /* 成績輸入網格 - 改為單欄或雙欄 */
+            .score-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .score-item label {
+                font-size: 14px;
+            }
+            
+            .score-item input,
+            .score-item select {
+                padding: 12px 10px;
+                font-size: 16px; /* 防止 iOS 自動縮放 */
+            }
+            
+            /* 學校選擇網格 - 改為單欄 */
+            .school-checkboxes {
+                grid-template-columns: 1fr;
+                max-height: 250px;
+                padding: 10px;
+            }
+            
+            .school-checkbox {
+                padding: 10px;
+                font-size: 15px;
+            }
+            
+            /* 按鈕調整 */
+            .btn {
+                padding: 14px 20px;
+                font-size: 15px;
+                margin-right: 8px;
+                margin-bottom: 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            /* 結果摘要 */
+            .summary {
+                padding: 20px 15px;
+            }
+            
+            .summary-number {
+                font-size: 36px;
+            }
+            
+            /* 表格容器 */
+            .results-table-container {
+                max-height: 500px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* 表格樣式調整 */
+            table {
+                font-size: 13px;
+                min-width: 800px; /* 確保表格不會太擠 */
+            }
+            
+            th, td {
+                padding: 8px 6px;
+                font-size: 12px;
+            }
+            
+            th {
+                font-size: 12px;
+                white-space: nowrap;
+            }
+            
+            /* 手動選擇區塊 */
+            .manual-select-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .manual-select-grid select,
+            .manual-select-grid input,
+            .manual-select-grid button {
+                width: 100%;
+            }
+            
+            /* 付費通知區塊 */
+            .payment-notice {
+                padding: 15px;
+            }
+            
+            .payment-notice h3 {
+                font-size: 20px;
+            }
+            
+            .payment-notice p {
+                font-size: 15px;
+            }
+            
+            .payment-notice a {
+                padding: 14px 25px !important;
+                font-size: 16px !important;
+            }
+        }
+        
+        /* 手機裝置 (Mobile) - 480px 以下 */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .header h1 {
+                font-size: 18px;
+            }
+            
+            .header p {
+                font-size: 12px;
+            }
+            
+            .content {
+                padding: 10px;
+            }
+            
+            .section {
+                padding: 12px;
+            }
+            
+            .section h3 {
+                font-size: 16px;
+            }
+            
+            /* 成績輸入改為單欄 */
+            .score-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                padding: 12px 15px;
+                font-size: 14px;
+                margin-right: 0;
+            }
+            
+            .summary-number {
+                font-size: 28px;
+            }
+            
+            table {
+                font-size: 11px;
+            }
+            
+            th, td {
+                padding: 6px 4px;
+                font-size: 11px;
+            }
+            
+            .checkbox-cell input {
+                width: 18px;
+                height: 18px;
+                transform: scale(1.1);
+            }
+            
+            .payment-notice h3 {
+                font-size: 18px;
+            }
+            
+            .payment-notice p {
+                font-size: 14px;
+            }
+        }
+        
+        /* 橫向模式優化 */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .results-table-container {
+                max-height: 300px;
+            }
+            
+            .school-checkboxes {
+                max-height: 200px;
+            }
+        }
+        
+        /* 觸控優化 */
+        @media (hover: none) and (pointer: coarse) {
+            /* 增加可點擊區域 */
+            .school-checkbox {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+            
+            .btn {
+                min-height: 44px;
+            }
+            
+            /* 移除 hover 效果 */
+            .school-checkbox:hover {
+                background: transparent;
+            }
+            
+            /* 點擊時的視覺反饋 */
+            .school-checkbox:active {
+                background: #e3f2fd;
+            }
+            
+            .btn:active {
+                transform: scale(0.98);
+            }
         }
     </style>
 </head>
