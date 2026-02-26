@@ -319,6 +319,52 @@
         let compareList = [];
         let finalList = [];
         
+        // 115年各科標準分數定義
+        const standards115 = {
+            '國文': { '頂標': 13, '前標': 12, '均標': 10, '後標': 9, '底標': 7 },
+            '英文': { '頂標': 13, '前標': 11, '均標': 8, '後標': 5, '底標': 3 },
+            '數學A': { '頂標': 12, '前標': 10, '均標': 8, '後標': 5, '底標': 4 },
+            '數學B': { '頂標': 11, '前標': 9, '均標': 5, '後標': 3, '底標': 2 },
+            '社會': { '頂標': 13, '前標': 12, '均標': 10, '後標': 8, '底標': 7 },
+            '自然': { '頂標': 13, '前標': 12, '均標': 9, '後標': 7, '底標': 5 }
+        };
+        
+        // 檢查使用者成績是否符合科系的115年採計標準
+        function checkStandards115(dept, userScores) {
+            const subjectMappings = [
+                { field: '115國文', subject: '國文', userScore: userScores.chinese },
+                { field: '115英文', subject: '英文', userScore: userScores.english },
+                { field: '115數A', subject: '數學A', userScore: userScores.mathA },
+                { field: '115數B', subject: '數學B', userScore: userScores.mathB },
+                { field: '115社會', subject: '社會', userScore: userScores.social },
+                { field: '115自然', subject: '自然', userScore: userScores.science }
+            ];
+            
+            for (const mapping of subjectMappings) {
+                const standardText = dept[mapping.field];
+                
+                // 如果該科系有採計此科目（有標準要求）
+                if (standardText && standardText.trim() !== '' && standardText !== '--') {
+                    // 使用者沒有輸入該科成績
+                    if (!mapping.userScore || mapping.userScore === 0) {
+                        return false; // 淘汰
+                    }
+                    
+                    // 取得該科目的標準分數
+                    const requiredScore = standards115[mapping.subject][standardText];
+                    
+                    if (requiredScore !== undefined) {
+                        // 使用者成績未達標準
+                        if (mapping.userScore < requiredScore) {
+                            return false; // 淘汰
+                        }
+                    }
+                }
+            }
+            
+            return true; // 通過檢查
+        }
+        
         // 已更換為最新的 GAS 網址
         const GAS_URL = 'https://script.google.com/macros/s/AKfycby7Z3HISh7ZP5iUvNdIQBupZjxFOULsZmt6H2ztvT12c-5UIFMiKaHs5iuwdxuKLLfS3Q/exec';
 
@@ -590,6 +636,11 @@
             
             passedDepts = allData.filter(dept => {
                 if (!selectedSchools.includes(dept['學校'])) return false;
+                
+                // 首先檢查115年採計標準
+                if (!checkStandards115(dept, scores)) {
+                    return false; // 不符合115年標準，直接淘汰
+                }
                 
                 dept.isNew = !dept['114招收'] || dept['114招收'].trim() === '';
                 dept.changes = detectChanges(dept);
