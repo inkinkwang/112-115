@@ -904,8 +904,8 @@
             document.getElementById('compareSection').innerHTML = `
                 <div class="section" style="border: 3px solid #764ba2; background: #f3e5f5;">
                     <h3 style="color: #764ba2;">🏆 評比科系</h3>
-                    <p style="margin-top: 10px; margin-bottom: 15px; color: #555; font-size: 20px;">
-                        想付費評估，可在評比科系中選擇最多六個，點選下方按鈕『查詢可付費評估之科系』，系統會顯示目前接受付費人工分析的科系
+                    <p style="margin-top: 10px; margin-bottom: 15px; color: #555; font-size: 18px; font-weight: bold;">
+                        想付費評估，可在評比科系中選擇最多六個，系統會顯示目前接受付費人工分析的科系
                     </p>
                     <div class="results-table-container" style="max-height: 1200px;">
                         <table>
@@ -1089,11 +1089,33 @@
                 '國立政治大學', '國立中興大學', '東海大學', '元智大學',
                 '國立聯合大學', '國立臺北教育大學', '中山醫學大學', '中原大學',
                 '逢甲大學', '長庚大學', '國立中山大學', '國立台灣海洋大學',
-                '國立宜蘭大學', '國立屏東大學', '國立高雄師範大學'
+                '國立宜蘭大學', '國立屏東大學', '國立高雄師範大學', '國立東華大學'
             ];
             
-            // 篩選只包含允許的學校
-            finalList = selected.filter(dept => allowedSchools.includes(dept['學校']));
+            // 定義特定學校只允許特定科系
+            const specificDepartments = {
+                '國立清華大學': ['化學系'],
+                '國立中正大學': ['地球與環境科學系'],
+                '國立陽明交通大學': ['半導體工程學系固態電子組', '半導體工程學系奈米科學組']
+            };
+            
+            // 篩選只包含允許的學校或特定科系
+            finalList = selected.filter(dept => {
+                const school = dept['學校'];
+                const department = dept['科系'];
+                
+                // 如果在允許學校清單中，直接通過
+                if (allowedSchools.includes(school)) {
+                    return true;
+                }
+                
+                // 如果是特定學校，檢查科系是否在允許清單中
+                if (specificDepartments[school]) {
+                    return specificDepartments[school].includes(department);
+                }
+                
+                return false;
+            });
             
             displayFinalTable();
             document.getElementById('finalSection').style.display = 'block';
