@@ -1522,22 +1522,38 @@
             // 紀錄原始樣式
             const originalMaxHeight = tableContainer.style.maxHeight;
             const originalOverflow = tableContainer.style.overflow;
+            const originalOverflowX = tableContainer.style.overflowX;
+            const originalWidth = targetElement.style.width;
 
-            // 暫時解除高度限制，讓表格完全展開以便截圖
+            // 取得表格完整展開所需的寬度
+            const fullWidth = tableContainer.scrollWidth;
+
+            // 暫時解除高度限制與捲動限制，讓表格完全展開
             tableContainer.style.maxHeight = 'none';
             tableContainer.style.overflow = 'visible';
+            tableContainer.style.overflowX = 'visible';
+
+            // 若在手機版(螢幕寬度小於表格實際寬度)，強制撐大外層區塊的寬度以防右側被裁切
+            if (window.innerWidth < fullWidth) {
+                targetElement.style.width = (fullWidth + 40) + 'px'; // +40px 保留左右 padding 空間
+            }
 
             // 延遲 300 毫秒確保瀏覽器已經將展開後的 DOM 重繪完成
             setTimeout(() => {
                 html2canvas(targetElement, {
                     scale: 2, // 提高解析度
                     useCORS: true,
-                    backgroundColor: '#f3e5f5', // 配合外層 border 的背景色
-                    logging: false
+                    backgroundColor: '#f3e5f5',
+                    logging: false,
+                    // 強制傳入實際展開後的長寬給畫布，確保完整繪製
+                    windowWidth: targetElement.scrollWidth,
+                    windowHeight: targetElement.scrollHeight
                 }).then(canvas => {
-                    // 恢復原始的表格高度限制與滾動條
+                    // 恢復原始的表格容器與外層樣式
                     tableContainer.style.maxHeight = originalMaxHeight;
                     tableContainer.style.overflow = originalOverflow;
+                    tableContainer.style.overflowX = originalOverflowX;
+                    targetElement.style.width = originalWidth;
 
                     // 將 canvas 轉換為圖片資料
                     const imgData = canvas.toDataURL('image/png');
@@ -1564,6 +1580,8 @@
                     // 發生錯誤也要記得恢復版面
                     tableContainer.style.maxHeight = originalMaxHeight;
                     tableContainer.style.overflow = originalOverflow;
+                    tableContainer.style.overflowX = originalOverflowX;
+                    targetElement.style.width = originalWidth;
                     if (document.body.contains(loadingMsg)) {
                         document.body.removeChild(loadingMsg);
                     }
