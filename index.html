@@ -7,9 +7,8 @@
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>115年個人申請篩選器(免費版)</title>
+    <title>115年個人申請篩選器(免費版V0228)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -1308,12 +1307,18 @@
             document.getElementById('compareSection').innerHTML = `
                 <div class="section" style="border: 3px solid #764ba2; background: #f3e5f5;">
                     <h3 style="color: #764ba2;">🏆 評比科系</h3>
+                    <div style="margin-top: 10px; margin-bottom: 10px; padding: 12px; background: #fff9e6; border: 1px solid #ffc107; border-radius: 8px;">
+                        <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                            ＊除手動新增科系之外，下方列表的自動篩選也已剔除未達到檢定科目標準、英聽標準之科系<br>
+                            ＊同級分的最後篩選科目，如果碰上只有"單一個超額篩選"比序，且與超額篩選科目雷同，視同進入第二階段名額
+                        </p>
+                    </div>
                     <div style="margin-top: 10px; margin-bottom: 15px; text-align: center;">
-                        <button class="btn" onclick="exportCompareToPDF()" style="font-size: 16px; padding: 12px 30px; background: white; color: black; border: 2px solid #333;">
-                            📄 輸出『評比科系總覽表』
+                        <button class="btn" onclick="exportCompareToImage()" style="font-size: 16px; padding: 12px 30px; background: white; color: black; border: 2px solid #333;">
+                            🖼️ 輸出『評比科系總覽圖』(PNG)
                         </button>
                     </div>
-                    <div class="results-table-container" id="compareTableContainer" style="max-height: 1200px;">
+                    <div class="results-table-container" id="compareTableContainer" style="max-height: 1800px;">
                         <table id="compareTable">
                             <thead>
                                 <tr>
@@ -1390,7 +1395,7 @@
                                         }
                                     });
                                     
-                                    // 115相加項 - 修正格式，只使用一個括號
+                                    // 115相加項
                                     const addRatio115 = dept['115倍率相加項'];
                                     const addSubjects115 = dept['115相加項'] || '';
                                     if (addRatio115 && addRatio115.trim() !== '' && addRatio115 !== '--') {
@@ -1498,189 +1503,72 @@
             `;
         }
         
-        function exportCompareToPDF() {
+        function exportCompareToImage() {
             if (compareList.length === 0) {
                 alert('目前沒有評比科系可以輸出！');
                 return;
             }
-            
+
             // 顯示處理中提示
             const loadingMsg = document.createElement('div');
             loadingMsg.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 30px 50px; border-radius: 10px; z-index: 10000; font-size: 20px; font-weight: bold;';
-            loadingMsg.textContent = '正在生成PDF，請稍候...';
+            loadingMsg.textContent = '正在生成完整長圖，請稍候...';
             document.body.appendChild(loadingMsg);
+
+            // 獲取要截圖的目標元素 (包含標題與表格的整個外框)
+            const targetElement = document.querySelector('#compareSection .section');
+            const tableContainer = document.getElementById('compareTableContainer');
             
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                
-                // 設定字體
-                doc.setFont('courier', 'normal');
-                
-                // 取得學測分數
-                const userScores = {
-                    chinese: document.getElementById('chinese').value || '--',
-                    english: document.getElementById('english').value || '--',
-                    mathA: document.getElementById('mathA').value || '--',
-                    mathB: document.getElementById('mathB').value || '--',
-                    social: document.getElementById('social').value || '--',
-                    science: document.getElementById('science').value || '--',
-                    listening: document.getElementById('listening').value || '--'
-                };
-                
-                // 每頁6個科系
-                const deptsPerPage = 6;
-                const totalPages = Math.ceil(compareList.length / deptsPerPage);
-                
-                for (let page = 0; page < totalPages; page++) {
-                    if (page > 0) {
-                        doc.addPage();
-                    }
+            // 紀錄原始樣式
+            const originalMaxHeight = tableContainer.style.maxHeight;
+            const originalOverflow = tableContainer.style.overflow;
+
+            // 暫時解除高度限制，讓表格完全展開以便截圖
+            tableContainer.style.maxHeight = 'none';
+            tableContainer.style.overflow = 'visible';
+
+            // 延遲 300 毫秒確保瀏覽器已經將展開後的 DOM 重繪完成
+            setTimeout(() => {
+                html2canvas(targetElement, {
+                    scale: 2, // 提高解析度
+                    useCORS: true,
+                    backgroundColor: '#f3e5f5', // 配合外層 border 的背景色
+                    logging: false
+                }).then(canvas => {
+                    // 恢復原始的表格高度限制與滾動條
+                    tableContainer.style.maxHeight = originalMaxHeight;
+                    tableContainer.style.overflow = originalOverflow;
+
+                    // 將 canvas 轉換為圖片資料
+                    const imgData = canvas.toDataURL('image/png');
                     
-                    // 標題
-                    doc.setFontSize(18);
-                    doc.setFont('courier', 'bold');
-                    doc.text('評比科系', 105, 15, { align: 'center' });
+                    // 建立下載連結
+                    const link = document.createElement('a');
+                    const now = new Date();
+                    const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
                     
-                    // 兩行說明文字
-                    doc.setFontSize(8);
-                    doc.setFont('courier', 'normal');
-                    doc.setTextColor(100, 100, 100);
-                    doc.text('*已自動剔除不符合檢定科目、篩選分數、英聽', 105, 22, { align: 'center' });
-                    doc.text('*同級分的最後篩選科目，如果碰上只有「單一個超額篩選」比序，且與超額篩選科目雷同，視同進入第二階段名額', 105, 27, { align: 'center' });
+                    link.download = `評比科系總覽表_${timestamp}.png`;
+                    link.href = imgData;
                     
-                    // 學測分數
-                    doc.setTextColor(0, 0, 0);
-                    const scoresText = `學測分數：國：${userScores.chinese}、英：${userScores.english}、數A：${userScores.mathA}、數B：${userScores.mathB}、社：${userScores.social}、自：${userScores.science}、英聽：${userScores.listening}`;
-                    doc.setFontSize(9);
-                    doc.text(scoresText, 105, 34, { align: 'center' });
-                    
-                    let yPos = 43;
-                    
-                    // 計算本頁要顯示的科系範圍
-                    const startIdx = page * deptsPerPage;
-                    const endIdx = Math.min(startIdx + deptsPerPage, compareList.length);
-                    
-                    for (let i = startIdx; i < endIdx; i++) {
-                        const dept = compareList[i];
-                        const show = (val) => val && val.trim() !== '' && val !== '--' ? val : '--';
-                        
-                        // 序號和學校科系
-                        doc.setFontSize(11);
-                        doc.setFont('courier', 'bold');
-                        const title = `${i + 1}. ${dept['學校']} - ${dept['科系']}`;
-                        doc.text(title, 10, yPos);
-                        yPos += 6;
-                        
-                        // 代碼
-                        doc.setFont('courier', 'normal');
-                        doc.setFontSize(9);
-                        doc.text(`代碼：${dept['代碼'] || '--'}`, 15, yPos);
-                        yPos += 5;
-                        
-                        // 招生名額
-                        const recruit115 = show(dept['115招收']);
-                        const recruit114 = show(dept['114招收']);
-                        const recruitChange = (recruit114 !== '--' && recruit115 !== '--' && recruit114 !== recruit115) ? 
-                            ` (114:${recruit114})` : '';
-                        doc.text(`招生名額：${recruit115}${recruitChange}`, 15, yPos);
-                        yPos += 5;
-                        
-                        // 英聽
-                        doc.text(`英聽：${show(dept['115英聽'])}`, 15, yPos);
-                        yPos += 5;
-                        
-                        // 甄試日期
-                        doc.text(`甄試日期：${show(dept['甄試日期'])}`, 15, yPos);
-                        yPos += 5;
-                        
-                        // 114篩選結果
-                        const screening = [
-                            dept['114篩選一'], dept['114篩選二'], dept['114篩選三'],
-                            dept['114篩選四'], dept['114篩選五']
-                        ].filter(s => s && s.trim() !== '').join(' → ');
-                        if (screening) {
-                            doc.text(`114篩選：${screening}`, 15, yPos);
-                            yPos += 5;
-                        }
-                        
-                        // 115科目與倍率
-                        const subjects115 = [];
-                        const subjectInfo = [
-                            { standard: '115國文', ratio: '115倍率國文', label: '國' },
-                            { standard: '115英文', ratio: '115倍率英文', label: '英' },
-                            { standard: '115數A', ratio: '115倍率數A', label: '數A' },
-                            { standard: '115數B', ratio: '115倍率數B', label: '數B' },
-                            { standard: '115社會', ratio: '115倍率社會', label: '社' },
-                            { standard: '115自然', ratio: '115倍率自然', label: '自' }
-                        ];
-                        
-                        subjectInfo.forEach(field => {
-                            const standard = dept[field.standard];
-                            const ratio = dept[field.ratio];
-                            if ((standard && standard.trim() !== '' && standard !== '--') || 
-                                (ratio && ratio.trim() !== '' && ratio !== '--')) {
-                                const standardText = (standard && standard.trim() !== '' && standard !== '--') ? standard : '--';
-                                const ratioText = (ratio && ratio.trim() !== '' && ratio !== '--') ? ratio : '--';
-                                subjects115.push(`${field.label}(${standardText}/${ratioText})`);
-                            }
-                        });
-                        
-                        // 相加項
-                        const addRatio115 = dept['115倍率相加項'];
-                        const addSubjects115 = dept['115相加項'] || '';
-                        if (addRatio115 && addRatio115.trim() !== '' && addRatio115 !== '--') {
-                            const subjectsInBracket = addSubjects115 ? ` (${addSubjects115})` : '';
-                            subjects115.push(`相加項(${addRatio115}${subjectsInBracket})`);
-                        }
-                        
-                        if (subjects115.length > 0) {
-                            const subjects115Text = subjects115.join('、');
-                            // 如果文字太長，分行顯示
-                            const maxWidth = 185;
-                            const lines = doc.splitTextToSize(`115科目倍率：${subjects115Text}`, maxWidth);
-                            lines.forEach(line => {
-                                doc.text(line, 15, yPos);
-                                yPos += 5;
-                            });
-                        }
-                        
-                        // 超額篩選
-                        const excessMethod = dept['115同級分超額篩選方式'] || dept['115同級分(分數)超額篩選方式'] || '';
-                        if (excessMethod && excessMethod.trim() !== '' && excessMethod !== '--') {
-                            const maxWidth = 185;
-                            const lines = doc.splitTextToSize(`超額篩選：${excessMethod}`, maxWidth);
-                            lines.forEach(line => {
-                                doc.text(line, 15, yPos);
-                                yPos += 5;
-                            });
-                        }
-                        
-                        yPos += 3; // 科系間距
-                    }
-                    
-                    // 頁碼
-                    doc.setFontSize(8);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text(`第 ${page + 1} 頁，共 ${totalPages} 頁`, 105, 285, { align: 'center' });
-                }
-                
-                // 儲存PDF
-                const now = new Date();
-                const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
-                doc.save(`評比科系總覽表_${timestamp}.pdf`);
-                
-                // 移除處理中提示
-                document.body.removeChild(loadingMsg);
-            } catch (error) {
-                console.error('生成PDF時發生錯誤:', error);
-                alert('生成PDF時發生錯誤，請稍後再試！');
-                
-                // 移除處理中提示
-                if (document.body.contains(loadingMsg)) {
+                    // 觸發下載
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // 移除處理中提示
                     document.body.removeChild(loadingMsg);
-                }
-            }
+                }).catch(error => {
+                    console.error('生成圖片時發生錯誤:', error);
+                    alert('生成圖片時發生錯誤，請稍後再試！');
+                    
+                    // 發生錯誤也要記得恢復版面
+                    tableContainer.style.maxHeight = originalMaxHeight;
+                    tableContainer.style.overflow = originalOverflow;
+                    if (document.body.contains(loadingMsg)) {
+                        document.body.removeChild(loadingMsg);
+                    }
+                });
+            }, 300);
         }
         
         function proceedToFinal() {
@@ -1830,7 +1718,7 @@
                                         }
                                     });
                                     
-                                    // 115相加項 - 修正格式，只使用一個括號
+                                    // 115相加項
                                     const addRatio115 = dept['115倍率相加項'];
                                     const addSubjects115 = dept['115相加項'] || '';
                                     if (addRatio115 && addRatio115.trim() !== '' && addRatio115 !== '--') {
