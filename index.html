@@ -1510,84 +1510,159 @@
             loadingMsg.textContent = '正在生成PDF，請稍候...';
             document.body.appendChild(loadingMsg);
             
-            // 獲取表格容器
-            const tableContainer = document.getElementById('compareTableContainer');
-            
-            // 暫時移除最大高度限制和滾動條，以便完整截圖
-            const originalMaxHeight = tableContainer.style.maxHeight;
-            const originalOverflow = tableContainer.style.overflow;
-            tableContainer.style.maxHeight = 'none';
-            tableContainer.style.overflow = 'visible';
-            
-            // 使用html2canvas截取表格
-            html2canvas(tableContainer, {
-                scale: 2, // 提高解析度
-                useCORS: true,
-                logging: false,
-                backgroundColor: '#ffffff'
-            }).then(canvas => {
-                // 恢復原始樣式
-                tableContainer.style.maxHeight = originalMaxHeight;
-                tableContainer.style.overflow = originalOverflow;
-                
+            try {
                 const { jsPDF } = window.jspdf;
-                const imgData = canvas.toDataURL('image/png');
+                const doc = new jsPDF('p', 'mm', 'a4');
                 
-                // 計算PDF尺寸
-                const imgWidth = canvas.width;
-                const imgHeight = canvas.height;
-                const ratio = imgWidth / imgHeight;
+                // 設定字體
+                doc.setFont('courier', 'normal');
                 
-                // A4尺寸 (mm)
-                const pdfWidth = 297; // A4橫向寬度
-                const pdfHeight = 210; // A4橫向高度
+                // 取得學測分數
+                const userScores = {
+                    chinese: document.getElementById('chinese').value || '--',
+                    english: document.getElementById('english').value || '--',
+                    mathA: document.getElementById('mathA').value || '--',
+                    mathB: document.getElementById('mathB').value || '--',
+                    social: document.getElementById('social').value || '--',
+                    science: document.getElementById('science').value || '--',
+                    listening: document.getElementById('listening').value || '--'
+                };
                 
-                // 計算圖片在PDF中的尺寸（保留邊距）
-                const margin = 10;
-                const maxWidth = pdfWidth - (margin * 2);
-                const maxHeight = pdfHeight - (margin * 2);
+                // 每頁6個科系
+                const deptsPerPage = 6;
+                const totalPages = Math.ceil(compareList.length / deptsPerPage);
                 
-                let finalWidth = maxWidth;
-                let finalHeight = finalWidth / ratio;
-                
-                // 如果圖片太高，需要分頁
-                const doc = new jsPDF({
-                    orientation: 'landscape',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-                
-                if (finalHeight <= maxHeight) {
-                    // 單頁可以放下
-                    doc.addImage(imgData, 'PNG', margin, margin, finalWidth, finalHeight);
-                } else {
-                    // 需要分多頁
-                    let currentHeight = 0;
-                    let pageCount = 0;
+                for (let page = 0; page < totalPages; page++) {
+                    if (page > 0) {
+                        doc.addPage();
+                    }
                     
-                    while (currentHeight < imgHeight) {
-                        if (pageCount > 0) {
-                            doc.addPage();
+                    // 標題
+                    doc.setFontSize(18);
+                    doc.setFont('courier', 'bold');
+                    doc.text('評比科系', 105, 15, { align: 'center' });
+                    
+                    // 兩行說明文字
+                    doc.setFontSize(8);
+                    doc.setFont('courier', 'normal');
+                    doc.setTextColor(100, 100, 100);
+                    doc.text('*已自動剔除不符合檢定科目、篩選分數、英聽', 105, 22, { align: 'center' });
+                    doc.text('*同級分的最後篩選科目，如果碰上只有「單一個超額篩選」比序，且與超額篩選科目雷同，視同進入第二階段名額', 105, 27, { align: 'center' });
+                    
+                    // 學測分數
+                    doc.setTextColor(0, 0, 0);
+                    const scoresText = `學測分數：國：${userScores.chinese}、英：${userScores.english}、數A：${userScores.mathA}、數B：${userScores.mathB}、社：${userScores.social}、自：${userScores.science}、英聽：${userScores.listening}`;
+                    doc.setFontSize(9);
+                    doc.text(scoresText, 105, 34, { align: 'center' });
+                    
+                    let yPos = 43;
+                    
+                    // 計算本頁要顯示的科系範圍
+                    const startIdx = page * deptsPerPage;
+                    const endIdx = Math.min(startIdx + deptsPerPage, compareList.length);
+                    
+                    for (let i = startIdx; i < endIdx; i++) {
+                        const dept = compareList[i];
+                        const show = (val) => val && val.trim() !== '' && val !== '--' ? val : '--';
+                        
+                        // 序號和學校科系
+                        doc.setFontSize(11);
+                        doc.setFont('courier', 'bold');
+                        const title = `${i + 1}. ${dept['學校']} - ${dept['科系']}`;
+                        doc.text(title, 10, yPos);
+                        yPos += 6;
+                        
+                        // 代碼
+                        doc.setFont('courier', 'normal');
+                        doc.setFontSize(9);
+                        doc.text(`代碼：${dept['代碼'] || '--'}`, 15, yPos);
+                        yPos += 5;
+                        
+                        // 招生名額
+                        const recruit115 = show(dept['115招收']);
+                        const recruit114 = show(dept['114招收']);
+                        const recruitChange = (recruit114 !== '--' && recruit115 !== '--' && recruit114 !== recruit115) ? 
+                            ` (114:${recruit114})` : '';
+                        doc.text(`招生名額：${recruit115}${recruitChange}`, 15, yPos);
+                        yPos += 5;
+                        
+                        // 英聽
+                        doc.text(`英聽：${show(dept['115英聽'])}`, 15, yPos);
+                        yPos += 5;
+                        
+                        // 甄試日期
+                        doc.text(`甄試日期：${show(dept['甄試日期'])}`, 15, yPos);
+                        yPos += 5;
+                        
+                        // 114篩選結果
+                        const screening = [
+                            dept['114篩選一'], dept['114篩選二'], dept['114篩選三'],
+                            dept['114篩選四'], dept['114篩選五']
+                        ].filter(s => s && s.trim() !== '').join(' → ');
+                        if (screening) {
+                            doc.text(`114篩選：${screening}`, 15, yPos);
+                            yPos += 5;
                         }
                         
-                        // 計算當前頁要顯示的區域
-                        const sourceY = currentHeight;
-                        const sourceHeight = Math.min(imgHeight - currentHeight, (maxHeight / finalWidth) * imgWidth);
-                        const displayHeight = (sourceHeight / imgWidth) * finalWidth;
+                        // 115科目與倍率
+                        const subjects115 = [];
+                        const subjectInfo = [
+                            { standard: '115國文', ratio: '115倍率國文', label: '國' },
+                            { standard: '115英文', ratio: '115倍率英文', label: '英' },
+                            { standard: '115數A', ratio: '115倍率數A', label: '數A' },
+                            { standard: '115數B', ratio: '115倍率數B', label: '數B' },
+                            { standard: '115社會', ratio: '115倍率社會', label: '社' },
+                            { standard: '115自然', ratio: '115倍率自然', label: '自' }
+                        ];
                         
-                        // 創建裁切後的canvas
-                        const pageCanvas = document.createElement('canvas');
-                        pageCanvas.width = imgWidth;
-                        pageCanvas.height = sourceHeight;
-                        const pageCtx = pageCanvas.getContext('2d');
-                        pageCtx.drawImage(canvas, 0, sourceY, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight);
+                        subjectInfo.forEach(field => {
+                            const standard = dept[field.standard];
+                            const ratio = dept[field.ratio];
+                            if ((standard && standard.trim() !== '' && standard !== '--') || 
+                                (ratio && ratio.trim() !== '' && ratio !== '--')) {
+                                const standardText = (standard && standard.trim() !== '' && standard !== '--') ? standard : '--';
+                                const ratioText = (ratio && ratio.trim() !== '' && ratio !== '--') ? ratio : '--';
+                                subjects115.push(`${field.label}(${standardText}/${ratioText})`);
+                            }
+                        });
                         
-                        const pageImgData = pageCanvas.toDataURL('image/png');
-                        doc.addImage(pageImgData, 'PNG', margin, margin, finalWidth, displayHeight);
+                        // 相加項
+                        const addRatio115 = dept['115倍率相加項'];
+                        const addSubjects115 = dept['115相加項'] || '';
+                        if (addRatio115 && addRatio115.trim() !== '' && addRatio115 !== '--') {
+                            const subjectsInBracket = addSubjects115 ? ` (${addSubjects115})` : '';
+                            subjects115.push(`相加項(${addRatio115}${subjectsInBracket})`);
+                        }
                         
-                        currentHeight += sourceHeight;
-                        pageCount++;
+                        if (subjects115.length > 0) {
+                            const subjects115Text = subjects115.join('、');
+                            // 如果文字太長，分行顯示
+                            const maxWidth = 185;
+                            const lines = doc.splitTextToSize(`115科目倍率：${subjects115Text}`, maxWidth);
+                            lines.forEach(line => {
+                                doc.text(line, 15, yPos);
+                                yPos += 5;
+                            });
+                        }
+                        
+                        // 超額篩選
+                        const excessMethod = dept['115同級分超額篩選方式'] || dept['115同級分(分數)超額篩選方式'] || '';
+                        if (excessMethod && excessMethod.trim() !== '' && excessMethod !== '--') {
+                            const maxWidth = 185;
+                            const lines = doc.splitTextToSize(`超額篩選：${excessMethod}`, maxWidth);
+                            lines.forEach(line => {
+                                doc.text(line, 15, yPos);
+                                yPos += 5;
+                            });
+                        }
+                        
+                        yPos += 3; // 科系間距
                     }
+                    
+                    // 頁碼
+                    doc.setFontSize(8);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(`第 ${page + 1} 頁，共 ${totalPages} 頁`, 105, 285, { align: 'center' });
                 }
                 
                 // 儲存PDF
@@ -1597,19 +1672,15 @@
                 
                 // 移除處理中提示
                 document.body.removeChild(loadingMsg);
-            }).catch(error => {
+            } catch (error) {
                 console.error('生成PDF時發生錯誤:', error);
                 alert('生成PDF時發生錯誤，請稍後再試！');
-                
-                // 恢復原始樣式
-                tableContainer.style.maxHeight = originalMaxHeight;
-                tableContainer.style.overflow = originalOverflow;
                 
                 // 移除處理中提示
                 if (document.body.contains(loadingMsg)) {
                     document.body.removeChild(loadingMsg);
                 }
-            });
+            }
         }
         
         function proceedToFinal() {
