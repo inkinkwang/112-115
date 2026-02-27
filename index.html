@@ -1220,7 +1220,7 @@
                                     <th>甄試日期</th>
                                     <th>招收人數<br>114→115</th>
                                     <th>115英聽</th>
-                                    <th>114篩選結果</th>
+                                    <th><span style="color: #ffd700; font-weight: 900; font-size: 16px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">114篩選結果<br/>請至少比對前三年歷史分數</span></th>
                                     <th>114超額</th>
                                 </tr>
                             </thead>
@@ -1268,7 +1268,20 @@
                                             (ratio && ratio.trim() !== '' && ratio !== '--')) {
                                             const standardText = (standard && standard.trim() !== '' && standard !== '--') ? standard : '--';
                                             const ratioText = (ratio && ratio.trim() !== '' && ratio !== '--') ? ratio : '--';
-                                            subjects115.push(`${field.label}(${standardText}/${ratioText})`);
+                                            
+                                            // 檢查與114的差異
+                                            const standard114Key = field.standard.replace('115', '114');
+                                            const ratio114Key = field.ratio.replace('115', '114');
+                                            const standard114 = dept[standard114Key] || '';
+                                            const ratio114 = dept[ratio114Key] || '';
+                                            
+                                            const hasChange = (standardText !== (standard114 || '--')) || (ratioText !== (ratio114 || '--'));
+                                            
+                                            if (hasChange) {
+                                                subjects115.push(`<span style="color: #dc3545; font-weight: 700;">${field.label}(${standardText}/${ratioText})</span>`);
+                                            } else {
+                                                subjects115.push(`${field.label}(${standardText}/${ratioText})`);
+                                            }
                                         }
                                     });
                                     
@@ -1277,7 +1290,17 @@
                                     const addSubjects115 = dept['115相加項'] || '';
                                     if (addRatio115 && addRatio115.trim() !== '' && addRatio115 !== '--') {
                                         const subjectsInBracket = addSubjects115 ? ` (${addSubjects115})` : '';
-                                        subjects115.push(`相加項(${addRatio115}${subjectsInBracket})`);
+                                        
+                                        // 檢查與114相加項的差異
+                                        const addRatio114 = dept['114倍率相加項'] || '';
+                                        const addSubjects114 = dept['114相加項'] || '';
+                                        const hasAddChange = (addRatio115 !== (addRatio114 || '--')) || (addSubjects115 !== (addSubjects114 || ''));
+                                        
+                                        if (hasAddChange) {
+                                            subjects115.push(`<span style="color: #dc3545; font-weight: 700;">相加項(${addRatio115}${subjectsInBracket})</span>`);
+                                        } else {
+                                            subjects115.push(`相加項(${addRatio115}${subjectsInBracket})`);
+                                        }
                                     }
                                     
                                     const subjects115Text = subjects115.length > 0 ? subjects115.join('、') : '--';
@@ -1379,8 +1402,8 @@
                 return;
             }
             
-            if (selected.length > 6) {
-                alert(`最多只能選擇6個科系進行最終評估！\n目前勾選了 ${selected.length} 個，請取消 ${selected.length - 6} 個。`);
+            if (selected.length > 16) {
+                alert(`最多只能選擇16個科系進行最終評估！\n目前勾選了 ${selected.length} 個，請取消 ${selected.length - 16} 個。`);
                 return;
             }
             
@@ -1438,7 +1461,7 @@
             
             document.getElementById('finalSection').innerHTML = `
                 <div class="section" style="border: 3px solid #28a745; background: #e8f5e9;">
-                    <h3 style="color: #28a745;">🎯 可付費評估之科系（最多6個）</h3>
+                    <h3 style="color: #28a745;">🎯 可付費評估之科系</h3>
                     
                     <div class="results-table-container">
                         <table>
@@ -1452,7 +1475,7 @@
                                     <th>甄試日期</th>
                                     <th>招收人數<br>114→115</th>
                                     <th>115英聽</th>
-                                    <th>114篩選結果</th>
+                                    <th><span style="color: #ffd700; font-weight: 900; font-size: 16px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">114篩選結果<br/>請至少比對前三年歷史分數</span></th>
                                     <th>114超額</th>
                                 </tr>
                             </thead>
@@ -1500,7 +1523,20 @@
                                             (ratio && ratio.trim() !== '' && ratio !== '--')) {
                                             const standardText = (standard && standard.trim() !== '' && standard !== '--') ? standard : '--';
                                             const ratioText = (ratio && ratio.trim() !== '' && ratio !== '--') ? ratio : '--';
-                                            subjects115.push(`${field.label}(${standardText}/${ratioText})`);
+                                            
+                                            // 檢查與114的差異
+                                            const standard114Key = field.standard.replace('115', '114');
+                                            const ratio114Key = field.ratio.replace('115', '114');
+                                            const standard114 = dept[standard114Key] || '';
+                                            const ratio114 = dept[ratio114Key] || '';
+                                            
+                                            const hasChange = (standardText !== (standard114 || '--')) || (ratioText !== (ratio114 || '--'));
+                                            
+                                            if (hasChange) {
+                                                subjects115.push(`<span style="color: #dc3545; font-weight: 700;">${field.label}(${standardText}/${ratioText})</span>`);
+                                            } else {
+                                                subjects115.push(`${field.label}(${standardText}/${ratioText})`);
+                                            }
                                         }
                                     });
                                     
@@ -1509,7 +1545,17 @@
                                     const addSubjects115 = dept['115相加項'] || '';
                                     if (addRatio115 && addRatio115.trim() !== '' && addRatio115 !== '--') {
                                         const subjectsInBracket = addSubjects115 ? ` (${addSubjects115})` : '';
-                                        subjects115.push(`相加項(${addRatio115}${subjectsInBracket})`);
+                                        
+                                        // 檢查與114相加項的差異
+                                        const addRatio114 = dept['114倍率相加項'] || '';
+                                        const addSubjects114 = dept['114相加項'] || '';
+                                        const hasAddChange = (addRatio115 !== (addRatio114 || '--')) || (addSubjects115 !== (addSubjects114 || ''));
+                                        
+                                        if (hasAddChange) {
+                                            subjects115.push(`<span style="color: #dc3545; font-weight: 700;">相加項(${addRatio115}${subjectsInBracket})</span>`);
+                                        } else {
+                                            subjects115.push(`相加項(${addRatio115}${subjectsInBracket})`);
+                                        }
                                     }
                                     
                                     const subjects115Text = subjects115.length > 0 ? subjects115.join('、') : '--';
