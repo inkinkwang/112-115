@@ -499,7 +499,7 @@
                     <ul style="list-style: none; padding-left: 0;">
                         <li style="margin-bottom: 8px;">☑️ <strong>免費版分析結果僅作為決策輔助，不作爲任何錄取保證，用戶須自行承擔決策風險。</strong></li>
                         <li style="margin-bottom: 8px;">☑️ <strong>數據限制：</strong>歷史數據經多次校對，惟仍可能存在錯誤之處，請官方公告資料為主，鑑於招生環境與競爭態勢具未來變動性，數據可能與實際結果存在偏差。</li>
-                        <li style="margin-bottom: 0;"><strong>篩選最後可以點選『可付費評估科系』，選擇需要的科系到Google表單進行付費取得分析報告。</strong></li>
+                        <li style="margin-bottom: 0;"><strong>篩選最後可以『免費輸出評估科系』也能繼續點選『可付費評估科系』，選擇需要的科系到Google表單進行付費取得分析報告。</strong></li>
                     </ul>
                 </div>
             </div>
@@ -1099,8 +1099,8 @@
                     <div>個符合條件的校系</div>
                 </div>
 
-                ${generateResultTable('依據114年可通過之科系 (出現重複的科系擇一即可，表示此科系隸屬於二個學群)', highDepts, 'high', '#28a745')}
-                ${generateResultTable('依據114年因同級分有機會通過之科系 (出現重複的科系擇一即可，表示此科系隸屬於二個學群)', mediumDepts, 'medium', '#17a2b8')}
+                ${generateResultTable('依據114年可通過之科系', highDepts, 'high', '#28a745')}
+                ${generateResultTable('依據114年因同級分有機會通過之科系 (或新科系/新組別)', mediumDepts, 'medium', '#17a2b8')}
                 ${generateResultTable('碰運氣的科系 (114年只差一級分沒通過，可查閱今年條件有無變動、或評估歷史五年的篩選分數、篩選百分比)', riskyDepts, 'risky', '#ff9800')}
             `;
         }
