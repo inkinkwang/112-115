@@ -538,7 +538,7 @@
             </div>
 
             <div id="schoolSection" class="section" style="display: none;">
-                <h3>🏫 步驟2：選擇學校（可複選）</h3>
+                <h3>🏫 步驟2：選擇學校（可複選、非必填）</h3>
                 <div class="select-all">
                     <label>
                         <input type="checkbox" id="selectAllSchools" onchange="toggleAllSchools()">
@@ -546,6 +546,17 @@
                     </label>
                 </div>
                 <div class="school-checkboxes" id="schoolCheckboxes"></div>
+            </div>
+
+            <div id="groupSection" class="section" style="display: none;">
+                <h3>🏫 步驟3：選擇學群（可複選、非必填）</h3>
+                <div class="select-all">
+                    <label>
+                        <input type="checkbox" id="selectAllGroups" onchange="toggleAllGroups()">
+                        全選/取消全選
+                    </label>
+                </div>
+                <div class="school-checkboxes" id="groupCheckboxes"></div>
                 <div style="margin-top: 20px;">
                     <button class="btn btn-primary" onclick="filterDepartments()">🔍 開始篩選</button>
                     <button class="btn btn-warning" onclick="reset()">🔄 重新輸入</button>
@@ -657,7 +668,9 @@
                     document.getElementById('loadingMessage').style.display = 'none';
                     document.getElementById('inputSection').style.display = 'block';
                     document.getElementById('schoolSection').style.display = 'block';
+                    document.getElementById('groupSection').style.display = 'block';
                     displaySchoolOptions();
+                    displayGroupOptions();
                     return; // 直接結束，不發送 API 請求
                 }
 
@@ -688,8 +701,10 @@
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('inputSection').style.display = 'block';
                 document.getElementById('schoolSection').style.display = 'block';
+                document.getElementById('groupSection').style.display = 'block';
 
                 displaySchoolOptions();
+                displayGroupOptions();
 
             } catch (error) {
                 console.error('❌ 載入資料失敗:', error);
@@ -755,7 +770,9 @@
                     document.getElementById('loadingMessage').style.display = 'none';
                     document.getElementById('inputSection').style.display = 'block';
                     document.getElementById('schoolSection').style.display = 'block';
+                    document.getElementById('groupSection').style.display = 'block';
                     displaySchoolOptions();
+                    displayGroupOptions();
                     
                 } catch (error) {
                     console.error('❌ CSV解析失敗:', error);
@@ -842,6 +859,44 @@
             document.querySelectorAll('.school-checkbox-input').forEach(cb => cb.checked = checked);
         }
         
+        // 顯示學群選項
+        function displayGroupOptions() {
+            const groups = [
+                '文史哲學群',
+                '外語學群',
+                '社會心理學群',
+                '資訊學群',
+                '藝術學群',
+                '數理化學群',
+                '地球環境學群',
+                '法政學群',
+                '財經學群',
+                '醫藥衛生學群',
+                '工程學群',
+                '生物資源學群',
+                '大眾傳播學群',
+                '生命科學學群',
+                '管理學群',
+                '教育學群',
+                '不分系學群',
+                '遊憩與運動學群',
+                '建築與設計學群'
+            ];
+            
+            const container = document.getElementById('groupCheckboxes');
+            container.innerHTML = groups.map(group => `
+                <label class="school-checkbox">
+                    <input type="checkbox" value="${group}" class="group-checkbox-input">
+                    ${group}
+                </label>
+            `).join('');
+        }
+        
+        function toggleAllGroups() {
+            const checked = document.getElementById('selectAllGroups').checked;
+            document.querySelectorAll('.group-checkbox-input').forEach(cb => cb.checked = checked);
+        }
+        
         // 解析篩選條件
         function parseScreeningCondition(str, scores) {
             str = String(str).trim();
@@ -879,13 +934,23 @@
             const selectedSchools = Array.from(document.querySelectorAll('.school-checkbox-input:checked'))
                 .map(cb => cb.value);
             
+            const selectedGroups = Array.from(document.querySelectorAll('.group-checkbox-input:checked'))
+                .map(cb => cb.value);
+            
             if (selectedSchools.length === 0) {
                 alert('請至少選擇一所學校！');
                 return;
             }
             
             passedDepts = allData.filter(dept => {
+                // 步驟2：學校篩選
                 if (!selectedSchools.includes(dept['學校'])) return false;
+                
+                // 步驟3：學群篩選（如果有選擇學群）
+                if (selectedGroups.length > 0) {
+                    const deptGroup = dept['學群'] || '';
+                    if (!selectedGroups.includes(deptGroup)) return false;
+                }
                 
                 // 首先檢查115年採計標準
                 if (!checkStandards115(dept, scores)) {
@@ -1206,7 +1271,7 @@
                 <div class="section" style="border: 3px solid #764ba2; background: #f3e5f5;">
                     <h3 style="color: #764ba2;">🏆 評比科系</h3>
                     <p style="margin-top: 10px; margin-bottom: 15px; color: #555; font-size: 18px; font-weight: bold;">
-                        想付費評估，可在評比科系中選擇最多六個，系統會顯示目前接受付費人工分析的科系
+                        想付費評估，可在評比科系中勾選，下方會顯示目前接受付費人工分析的科系
                     </p>
                     <div class="results-table-container" style="max-height: 1200px;">
                         <table>
@@ -1643,8 +1708,10 @@
                     <div class="payment-notice">
                         <h3>💳 人工落點分析-付費版申請</h3>
                         <p style="margin-top: 15px;">
-                            下方科系可進階付費取得人工分析,請回到Google表單進行付款,請於付款頁面的『留言給商店』填上您想人工分析之學校科系(包含科系代碼)＋個人學測分數＋英聽成績。
-                        </p>
+                            下方列表為可進階分析之科系,可在Google表單付款,單筆費用為1間科系，務必於付款頁面的『留言給商店』填上學校科系(含代碼)＋個人學測分數＋英聽。
+                            </p>
+                            競爭熱門的『夢幻科系』『碰運氣組』注意：本服務不含比對第一階段的篩選科目對照歷史百分比，因為很多落點分析網站已提供分數轉換對照，可多加利用。
+                            </p>
                         <div style="margin-top: 15px; text-align: center;">
                             <a href="https://forms.gle/oFQvZNbXEiSLVJSbA" target="_blank" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #dc3545, #c82333); color: white; font-size: 20px; font-weight: 700; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 15px rgba(220,53,69,0.4); letter-spacing: 1px;">
                                 📋 前往表單進行付款
@@ -1672,7 +1739,9 @@
             document.getElementById('compareSection').style.display = 'none';
             document.getElementById('finalSection').style.display = 'none';
             document.querySelectorAll('.school-checkbox-input').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.group-checkbox-input').forEach(cb => cb.checked = false);
             document.getElementById('selectAllSchools').checked = false;
+            document.getElementById('selectAllGroups').checked = false;
             manuallyAddedDepts = [];
             passedDepts = [];
             compareList = [];
