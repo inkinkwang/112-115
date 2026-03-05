@@ -484,7 +484,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎓 115年個人申請篩選器(免費版V0228-修正數學AB二擇一檢定問題)</h1>
+            <h1>🎓 115年個人申請篩選器(免費版V0228)</h1>
             <p>根據114年篩選結果，粗估列出通過第一階段篩選校系的簡易工具，手機建議瀏覽器chrome、safari開啟</p>
         </div>
         
@@ -1218,7 +1218,7 @@
                 </div>
                 <div style="margin-top: 20px; text-align: center;">
                     <button class="btn btn-primary" onclick="proceedToCompare()" style="font-size: 18px; padding: 15px 40px;">
-                        🏆 進入評比科系（最多12個）
+                        🏆 進入評比科系（限14間）
                     </button>
                 </div>
             `;
@@ -1316,8 +1316,8 @@
                 return;
             }
             
-            if (compareList.length > 12) {
-                alert(`最多只能評比12個科系！\n目前選擇了 ${compareList.length} 個，請取消 ${compareList.length - 12} 個。`);
+            if (compareList.length > 14) {
+                alert(`最多只能評比14個科系！\n目前選擇了 ${compareList.length} 個，請取消 ${compareList.length - 14} 個。`);
                 return;
             }
             
@@ -1623,8 +1623,8 @@
                 return;
             }
             
-            if (selected.length > 12) {
-                alert(`最多只能選擇12個科系進行最終評估！\n目前勾選了 ${selected.length} 個，請取消 ${selected.length - 12} 個。`);
+            if (selected.length > 14) {
+                alert(`最多只能選擇14個科系進行最終評估！\n目前勾選了 ${selected.length} 個，請取消 ${selected.length - 14} 個。`);
                 return;
             }
             
